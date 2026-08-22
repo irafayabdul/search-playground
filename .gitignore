@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+.env
+
+# Notebook outputs are stripped before commit — see README "Committing notebooks".
+
+# Model cache
+.cache/
+data/raw/
+data/amazon_*.jsonl
