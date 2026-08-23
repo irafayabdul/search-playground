@@ -11,3 +11,7 @@ __pycache__/
 .cache/
 data/raw/
 data/amazon_*.jsonl
+
+# Meeting transcripts contain participants' names and email addresses —
+# this repository is public.
+meetings/
