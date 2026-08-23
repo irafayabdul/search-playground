@@ -80,7 +80,8 @@ def create_index(
         if not recreate:
             return {"acknowledged": True, "already_existed": True}
         client.indices.delete(index=index)
-    builder = build_product_mapping if mapping == "products" else build_mapping
+    builder = {"products": build_product_mapping,
+               "esci": build_esci_mapping}.get(mapping, build_mapping)
     return client.indices.create(index=index, body=builder(hnsw))
 
 def build_product_mapping(hnsw: HNSWParams | None = None) -> Dict[str, Any]:
@@ -106,6 +107,40 @@ def build_product_mapping(hnsw: HNSWParams | None = None) -> Dict[str, Any]:
             "price": {"type": "float"},
             "average_rating": {"type": "float"},
             "rating_number": {"type": "integer"},
+            "embedding": {
+                "type": "knn_vector",
+                "dimension": EMBED_DIM,
+                "method": {
+                    "name": "hnsw",
+                    "space_type": hnsw.space_type,
+                    "engine": hnsw.engine,
+                    "parameters": {"m": hnsw.m,
+                                   "ef_construction": hnsw.ef_construction},
+                },
+            },
+        }
+    }
+    return base
+
+
+def build_esci_mapping(hnsw: HNSWParams | None = None) -> Dict[str, Any]:
+    """Mapping for the ESCI corpus (see esci.py).
+
+    Thinner filter metadata than the Amazon-Reviews corpus by design: ESCI
+    natively carries only brand and color. Price/rating/category require the
+    ESCI-S enrichment, which is a separate 3.4 GB download and not wired here.
+    """
+    hnsw = hnsw or HNSWParams()
+    base = build_mapping(hnsw)
+    base["mappings"] = {
+        "properties": {
+            "title": {"type": "text",
+                      "fields": {"keyword": {"type": "keyword", "ignore_above": 256}}},
+            "features": {"type": "text"},
+            "text": {"type": "text"},
+            "brand": {"type": "keyword"},
+            "color": {"type": "keyword"},
+            "locale": {"type": "keyword"},
             "embedding": {
                 "type": "knn_vector",
                 "dimension": EMBED_DIM,

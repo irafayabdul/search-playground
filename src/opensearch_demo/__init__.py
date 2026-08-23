@@ -5,10 +5,10 @@ from .schema import create_index
 from .ingest import index_docs, prepare
 from .search import hybrid_search, lexical_search, neural_search, reciprocal_rank_fusion
 from .rerank import rerank
-from . import amazon, corpus, pipeline
+from . import amazon, corpus, esci, pipeline
 
 __all__ = [
     "get_client", "wait_for_cluster", "HNSWParams", "PipelineParams",
     "create_index", "prepare", "index_docs", "lexical_search", "neural_search",
-    "hybrid_search", "reciprocal_rank_fusion", "rerank", "amazon", "corpus", "pipeline",
+    "hybrid_search", "reciprocal_rank_fusion", "rerank", "amazon", "corpus", "esci", "pipeline",
 ]

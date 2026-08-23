@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from . import amazon, corpus, pipeline
+from . import amazon, corpus, esci, pipeline
 from .client import get_client, wait_for_cluster
 from .config import INDEX_NAME, PipelineParams
 from .ingest import index_docs, prepare
@@ -24,8 +24,13 @@ def ensure_index(client, index: str = INDEX_NAME, recreate: bool = False,
 
     print(f"building index '{index}' ({dataset}) ...")
     create_index(client, index=index, recreate=True,
-                 mapping="products" if dataset == "amazon" else "toy")
-    docs = amazon.load(category, limit=limit) if dataset == "amazon" else corpus.load()
+                 mapping={"amazon": "products", "esci": "esci"}.get(dataset, "toy"))
+    if dataset == "amazon":
+        docs = amazon.load(category, limit=limit)
+    elif dataset == "esci":
+        docs = esci.load(limit=limit)
+    else:
+        docs = corpus.load()
     print(f"  embedding {len(docs)} documents ...")
     prepared = prepare(docs)
     succeeded, errors = index_docs(client, prepared, index=index)
@@ -41,7 +46,7 @@ def main() -> int:
                     default="how do I make vector search faster")
     ap.add_argument("--mode", choices=["lexical", "neural", "hybrid"], default="hybrid")
     ap.add_argument("--rebuild", action="store_true", help="drop and rebuild the index")
-    ap.add_argument("--dataset", choices=["toy", "amazon"], default="toy")
+    ap.add_argument("--dataset", choices=["toy", "amazon", "esci"], default="toy")
     ap.add_argument("--amazon-category", default=amazon.DEFAULT_CATEGORY)
     ap.add_argument("--limit", type=int, default=None,
                     help="index only the first N documents (amazon)")
@@ -53,8 +58,12 @@ def main() -> int:
     health = wait_for_cluster(client)
     print(f"cluster: {health['cluster_name']} / {health['status']}\n")
 
-    index = (f"products-{args.amazon_category.lower()}"
-             if args.dataset == "amazon" else INDEX_NAME)
+    if args.dataset == "amazon":
+        index = f"products-{args.amazon_category.lower()}"
+    elif args.dataset == "esci":
+        index = esci.INDEX_NAME
+    else:
+        index = INDEX_NAME
     ensure_index(client, index=index, recreate=args.rebuild, dataset=args.dataset,
                  category=args.amazon_category, limit=args.limit)
 

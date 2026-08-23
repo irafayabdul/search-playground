@@ -1,0 +1,447 @@
+<title>Search Pipeline Walkthrough</title>
+<style>
+:root {
+  --paper:#FAFBFC; --surface:#FFFFFF; --ink:#1B2430; --muted:#5C6675;
+  --line:#DBE0E7; --accent:#0E7A6F; --accent-ink:#0A5A52; --accent-soft:#EDF5F3;
+  --warn:#B4540A; --warn-soft:#F9EFE6; --chip-skip:#EEF1F4;
+  --display:"Seravek","Gill Sans","Gill Sans MT","Trebuchet MS","Segoe UI",sans-serif;
+  --body:"Charter","Bitstream Charter","Iowan Old Style","Sitka Text",Cambria,Georgia,serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:#10151D; --surface:#161D27; --ink:#E6EBF1; --muted:#96A1B0;
+    --line:#2A3340; --accent:#45BFB0; --accent-ink:#7DD6CA; --accent-soft:#152520;
+    --warn:#DF8B4E; --warn-soft:#2A1F15; --chip-skip:#1E2631;
+  }
+}
+:root[data-theme="dark"] {
+  --paper:#10151D; --surface:#161D27; --ink:#E6EBF1; --muted:#96A1B0;
+  --line:#2A3340; --accent:#45BFB0; --accent-ink:#7DD6CA; --accent-soft:#152520;
+  --warn:#DF8B4E; --warn-soft:#2A1F15; --chip-skip:#1E2631;
+}
+* { box-sizing:border-box; }
+body {
+  background:var(--paper); color:var(--ink); font-family:var(--body);
+  font-size:16px; line-height:1.55; margin:0; padding:0 20px 72px;
+}
+main { max-width:900px; margin:0 auto; }
+header.page { padding:48px 0 8px; border-bottom:2px solid var(--ink); margin-bottom:28px; }
+.eyebrow {
+  font-family:var(--display); font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted); display:flex; flex-wrap:wrap;
+  gap:6px 14px; align-items:center; margin-bottom:14px;
+}
+.eyebrow .check {
+  color:var(--accent-ink); background:var(--accent-soft);
+  padding:2px 9px; border-radius:2px; letter-spacing:.1em;
+}
+h1 {
+  font-family:var(--display); font-weight:600; font-size:clamp(26px,4.5vw,34px);
+  line-height:1.12; margin:0 0 10px; text-wrap:balance; letter-spacing:-.01em;
+}
+.standfirst { font-size:17px; color:var(--muted); max-width:64ch; margin:0 0 26px; }
+h2 {
+  font-family:var(--display); font-weight:600; font-size:20px; margin:44px 0 12px;
+  letter-spacing:-.005em;
+}
+h3 { font-family:var(--display); font-weight:600; font-size:16px; margin:26px 0 6px; }
+p { max-width:70ch; margin:0 0 14px; }
+a { color:var(--accent-ink); text-decoration-thickness:1px; text-underline-offset:2px; }
+.verdict {
+  background:var(--accent-soft); border-left:3px solid var(--accent);
+  padding:20px 24px; margin:0 0 8px;
+}
+.verdict h2 { margin:0 0 10px; font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-ink); }
+.verdict p { margin:0 0 10px; }
+.verdict p:last-child { margin:0; }
+.callout {
+  background:var(--warn-soft); border-left:3px solid var(--warn);
+  padding:18px 22px; margin:18px 0;
+}
+.callout .tag { font-family:var(--display); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--warn); display:block; margin-bottom:8px; }
+.callout p { margin:0 0 10px; } .callout p:last-child { margin:0; }
+.tablewrap { overflow-x:auto; margin:14px 0 6px; border:1px solid var(--line); background:var(--surface); }
+table { border-collapse:collapse; width:100%; font-size:14px; }
+th {
+  font-family:var(--display); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--muted); text-align:left; padding:10px 14px; border-bottom:2px solid var(--line);
+  white-space:nowrap;
+}
+td { padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+tr:last-child td { border-bottom:none; }
+td.num, .num { font-family:var(--mono); font-size:12.5px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+td.name { font-family:var(--display); font-weight:600; font-size:13.5px; white-space:nowrap; }
+.chip {
+  font-family:var(--display); display:inline-block; font-size:10.5px; font-weight:600;
+  letter-spacing:.1em; text-transform:uppercase; padding:2px 8px; border-radius:2px; white-space:nowrap;
+}
+.chip.keep, .chip.adopt { background:var(--accent-soft); color:var(--accent-ink); }
+.chip.keep { outline:1px solid var(--accent); }
+.chip.note { background:transparent; color:var(--muted); outline:1px solid var(--line); }
+.chip.skip { background:var(--chip-skip); color:var(--muted); }
+.chip.avoid { background:var(--warn-soft); color:var(--warn); }
+.mark { font-size:15px; line-height:1; }
+.mark.full { color:var(--accent); } .mark.part { color:var(--muted); } .mark.none { color:var(--warn); }
+.legend { font-family:var(--display); font-size:12px; color:var(--muted); margin:4px 0 0; }
+.card {
+  background:var(--surface); border:1px solid var(--line); padding:20px 24px; margin:16px 0;
+}
+.card header { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:baseline; margin-bottom:8px; }
+.card h3 { margin:0; font-size:17px; }
+.facts { display:grid; grid-template-columns:max-content 1fr; gap:5px 18px; margin:12px 0; font-size:14px; }
+.facts dt { font-family:var(--display); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding-top:2px; }
+.facts dd { margin:0; }
+.fit { border-top:1px solid var(--line); padding-top:10px; font-size:14.5px; }
+.fit strong { font-family:var(--display); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-ink); }
+ol.steps { counter-reset:step; list-style:none; padding:0; max-width:76ch; }
+ol.steps li {
+  counter-increment:step; position:relative; padding:0 0 14px 44px; font-size:14.5px;
+}
+ol.steps li::before {
+  content:counter(step); position:absolute; left:0; top:1px;
+  font-family:var(--mono); font-size:12px; color:var(--accent-ink);
+  background:var(--accent-soft); width:26px; height:26px; border-radius:2px;
+  display:flex; align-items:center; justify-content:center;
+}
+code { font-family:var(--mono); font-size:.85em; background:var(--chip-skip); padding:1px 5px; border-radius:2px; }
+footer.method {
+  margin-top:52px; padding-top:16px; border-top:1px solid var(--line);
+  font-family:var(--display); font-size:12.5px; color:var(--muted); max-width:76ch;
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior:smooth; } }
+
+pre.code {
+  background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent);
+  padding:14px 16px; overflow-x:auto; margin:12px 0; font-family:var(--mono);
+  font-size:12.5px; line-height:1.55; color:var(--ink);
+}
+pre.code .c { color:var(--muted); font-style:italic; }
+.filemark {
+  font-family:var(--mono); font-size:11.5px; color:var(--accent-ink);
+  background:var(--accent-soft); padding:2px 8px; border-radius:2px;
+  display:inline-block; margin:16px 0 0;
+}
+.why { border-left:3px solid var(--line); padding:2px 0 2px 16px; margin:12px 0; }
+.why strong { font-family:var(--display); font-size:11.5px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--accent-ink); display:block; margin-bottom:4px; }
+.toc { background:var(--surface); border:1px solid var(--line); padding:18px 24px; margin:20px 0 34px; }
+.toc ol { margin:0; padding-left:20px; font-family:var(--display); font-size:14px; line-height:1.9; }
+.toc a { text-decoration:none; } .toc a:hover { text-decoration:underline; }
+.flow { display:grid; gap:10px; margin:18px 0; }
+.flow .step {
+  display:grid; grid-template-columns:minmax(0,180px) 1fr; gap:16px; align-items:baseline;
+  border-bottom:1px solid var(--line); padding-bottom:10px;
+}
+.flow .step:last-child { border-bottom:none; }
+.flow .who { font-family:var(--mono); font-size:12px; color:var(--accent-ink); }
+.flow .what { font-size:14.5px; }
+figure.dia { margin:20px 0; padding:18px; background:var(--surface); border:1px solid var(--line); overflow-x:auto; }
+figure.dia figcaption { font-family:var(--display); font-size:12.5px; color:var(--muted); margin-top:12px; }
+h2 { scroll-margin-top:16px; }
+</style>
+<main>
+<header class="page">
+  <div class="eyebrow"><span>Search Project · Code Guide</span><span>search-playground</span></div>
+  <h1>Search Pipeline Walkthrough</h1>
+  <p class="standfirst">Every module in <code>src/opensearch_demo/</code>, in the order the
+  data moves through it — and the reasoning behind each decision, since most of them
+  came straight out of the knowledge-sharing session.</p>
+</header>
+
+<div class="toc">
+<ol>
+  <li><a href="#shape">The shape of the thing</a></li>
+  <li><a href="#indextime">Index time — building the haystack</a></li>
+  <li><a href="#querytime">Query time — the funnel</a></li>
+  <li><a href="#knobs">Every knob, and what turning it does</a></li>
+  <li><a href="#esci">The ESCI dataset, decoded</a></li>
+  <li><a href="#reading">Reading order and exercises</a></li>
+</ol>
+</div>
+
+<h2 id="shape">1 · The shape of the thing</h2>
+<p>Roughly 700 lines across nine modules. It only looks like a lot because there are
+three interchangeable dataset loaders. Everything else is two flows.</p>
+
+<div class="flow">
+  <div class="step"><span class="who">index time</span>
+    <span class="what">loader → <code>build_embedding_text</code> → <code>encode</code> → bulk write. Happens once, takes ~90 min for 482k documents.</span></div>
+  <div class="step"><span class="who">query time</span>
+    <span class="what">retrieve → trim → rerank → return. Happens per search, takes milliseconds.</span></div>
+</div>
+
+<p>The two are joined by exactly one contract: <strong>the same embedding model must
+produce both the document vectors and the query vector.</strong> Break that and cosine
+similarity becomes noise — which is also why fine-tuning the model later forces a full
+reindex.</p>
+
+
+<figure class="dia">
+<svg viewBox="0 0 640 250" width="100%" style="max-width:640px" role="img"
+     aria-label="Four-stage retrieval funnel narrowing from 20 candidates to 5 results">
+  <defs>
+    <style>
+      .bar { fill: var(--accent); opacity:.20; }
+      .barln { fill:none; stroke: var(--accent); stroke-width:1.5; }
+      .lbl { font-family: var(--mono); font-size:12px; fill: var(--ink); }
+      .sub { font-family: var(--mono); font-size:10.5px; fill: var(--muted); }
+      .cost{ font-family: var(--mono); font-size:10.5px; fill: var(--warn); }
+    </style>
+  </defs>
+  <rect class="bar" x="20" y="18"  width="460" height="34" rx="2"/>
+  <rect class="barln" x="20" y="18"  width="460" height="34" rx="2"/>
+  <text class="lbl" x="32" y="40">1 · retrieve</text>
+  <text class="sub" x="150" y="40">BM25 + k-NN, fused by RRF</text>
+  <text class="cost" x="496" y="40">20 docs · cheap</text>
+
+  <rect class="bar" x="20" y="70"  width="290" height="34" rx="2"/>
+  <rect class="barln" x="20" y="70"  width="290" height="34" rx="2"/>
+  <text class="lbl" x="32" y="92">2 · trim</text>
+  <text class="sub" x="150" y="92">must / should filters</text>
+  <text class="cost" x="496" y="92">12 docs · free</text>
+
+  <rect class="bar" x="20" y="122" width="180" height="34" rx="2"/>
+  <rect class="barln" x="20" y="122" width="180" height="34" rx="2"/>
+  <text class="lbl" x="32" y="144">3 · rerank</text>
+  <text class="sub" x="150" y="144">cross-encoder</text>
+  <text class="cost" x="496" y="144">10 docs · expensive</text>
+
+  <rect class="bar" x="20" y="174" width="95" height="34" rx="2"/>
+  <rect class="barln" x="20" y="174" width="95" height="34" rx="2"/>
+  <text class="lbl" x="32" y="196">4 · final</text>
+  <text class="sub" x="150" y="196">what an LLM would read</text>
+  <text class="cost" x="496" y="196">5 docs</text>
+
+  <text class="sub" x="20" y="232">each stage costs more per document than the last — and sees fewer of them</text>
+</svg>
+<figcaption>The funnel, at the demo's default sizes. Production runs the same shape an
+order of magnitude wider: ~1000 → ~100 → ~50 → ~10.</figcaption>
+</figure>
+
+
+<h2 id="indextime">2 · Index time — building the haystack</h2>
+
+<h3>Three loaders, one shape</h3>
+<p><code>corpus.py</code> (33 hand-written docs), <code>amazon.py</code> (94k Appliances
+products), and <code>esci.py</code> (482k judged products) all do the same job: turn a
+messy source row into one uniform dict.</p>
+<pre class="code">{
+  &quot;id&quot;:       &quot;B07VXLVHGL&quot;,         # stable, used as the OpenSearch _id
+  &quot;title&quot;:    &quot;COSTWAY Countertop Ice Maker...&quot;,
+  &quot;features&quot;: &quot;26 lbs per 24h. Ready in 6 mins...&quot;,   # bullet points
+  &quot;text&quot;:     &quot;Full product description...&quot;,
+  # ...then whatever filter fields that dataset happens to have
+}</pre>
+<div class="why"><strong>Why it matters</strong>
+Because every loader emits this shape, nothing downstream knows or cares which dataset
+is loaded. Swapping corpora is a <code>--dataset</code> flag, not a refactor.</div>
+
+<p>Real data is filthy, so loaders defend against it. <code>amazon.py</code> gets prices
+as <code>13.99</code>, <code>"$13.99"</code>, <code>"None"</code>, or nonsense:</p>
+<pre class="code">def _parse_price(value) -&gt; Optional[float]:
+    if value is None: return None
+    if isinstance(value, (int, float)): return float(value)
+    s = str(value).strip().lstrip(&quot;$&quot;).replace(&quot;,&quot;, &quot;&quot;)
+    try:    return float(s)
+    except ValueError: return None     # unparseable -&gt; absent, never a crash</pre>
+
+<h3>Building the text to embed</h3>
+<span class="filemark">embed.py</span>
+<pre class="code">def build_embedding_text(doc: dict) -&gt; str:
+    parts = [doc.get(&quot;title&quot;, &quot;&quot;), doc.get(&quot;features&quot;, &quot;&quot;), doc.get(&quot;text&quot;, &quot;&quot;)]
+    return &quot;\n\n&quot;.join(p.strip() for p in parts if p and p.strip())</pre>
+<p>Three lines carrying two decisions from the call.</p>
+<div class="why"><strong>Concatenate, don't average</strong>
+Embedding the title and body separately and averaging the vectors yields something that
+represents neither well. Joining them into one string lets the model attend across both.</div>
+<div class="why"><strong>Order is a truncation strategy</strong>
+MiniLM reads 256 tokens and silently discards everything after. Title first means the
+most identifying text survives; the description's tail is what gets eaten.</div>
+
+<p>Silent loss is the dangerous kind, so we count it:</p>
+<pre class="code">def warn_on_truncation(texts, model_name=EMBED_MODEL) -&gt; List[int]:
+    tok = get_encoder(model_name).tokenizer
+    return [i for i, t in enumerate(texts)
+            if len(tok.encode(t, add_special_tokens=True)) &gt; EMBED_MAX_TOKENS]</pre>
+<p>On the ESCI corpus that fires loudly: <strong>202,607 of 482,060 documents (42%)</strong>
+exceed the window. That is not a bug to fix — it is a real property of the corpus you should
+know before trusting a recall number. The fix, when you want one, is a longer-window model.</p>
+
+<h3>The schema — where fields earn their place</h3>
+<span class="filemark">schema.py</span>
+<p>The rule from the meeting: a field belongs in the index only if you will filter, score,
+or retrieve on it. Columns that serve none of those purposes are weight.</p>
+<pre class="code">&quot;title&quot;:    {&quot;type&quot;: &quot;text&quot;,                     # analysed -&gt; BM25 can match it
+             &quot;fields&quot;: {&quot;keyword&quot;: {&quot;type&quot;: &quot;keyword&quot;}}},   # raw -&gt; exact filters
+&quot;brand&quot;:    {&quot;type&quot;: &quot;keyword&quot;},                 # NOT text: filters need exact terms
+&quot;price&quot;:    {&quot;type&quot;: &quot;float&quot;},                   # numeric -&gt; range queries
+&quot;location&quot;: {&quot;type&quot;: &quot;geo_point&quot;},               # enables geo_distance
+&quot;embedding&quot;: {
+    &quot;type&quot;: &quot;knn_vector&quot;, &quot;dimension&quot;: EMBED_DIM,
+    &quot;method&quot;: {&quot;name&quot;: &quot;hnsw&quot;, &quot;space_type&quot;: &quot;cosinesimil&quot;, &quot;engine&quot;: &quot;lucene&quot;,
+               &quot;parameters&quot;: {&quot;m&quot;: 16, &quot;ef_construction&quot;: 128}},
+},</pre>
+<div class="why"><strong>text vs keyword is the most common mistake</strong>
+<code>text</code> is tokenised, lowercased, stemmed — good for prose, useless for an exact
+filter. <code>keyword</code> is stored raw. Most baffling zero-result queries trace back to
+this one choice.</div>
+<div class="why"><strong>m and ef_construction are permanent</strong>
+They live inside the vector field definition and are baked into the graph as it is built.
+Changing them means a full reindex — which is why <code>create_index</code> has a
+<code>recreate</code> flag. Only <code>ef_search</code> (an index <em>setting</em>, not a
+mapping) can be tuned on a live index.</div>
+
+<h3>Writing it</h3>
+<span class="filemark">ingest.py</span>
+<pre class="code">vectors = encode(texts)
+return [{**d, &quot;embedding&quot;: vectors[i].tolist()} for i, d in enumerate(docs)]
+# ...then bulk() writes them in batches</pre>
+<div class="why"><strong>refresh=True is a notebook convenience</strong>
+It makes documents searchable immediately. In production the refresh interval exists
+precisely to batch that work — forcing it per write collapses indexing throughput.</div>
+<p>Note we embed <em>client-side</em>. The alternative Rashid showed is ML Commons:
+register a model group, deploy the model into the cluster, attach an ingest pipeline so
+OpenSearch embeds on write. That removes the Python-side model but makes indexing compete
+with queries for cluster resources. The hook is marked in <code>ingest.prepare</code>.</p>
+
+<h2 id="querytime">3 · Query time — the funnel</h2>
+<p><code>pipeline.py:run</code> is the spine — read this one first. Each stage is more
+expensive per document and sees fewer of them; invert that and you are running a
+cross-encoder over the entire corpus.</p>
+
+<h3>Stage 1a — lexical (BM25)</h3>
+<pre class="code">&quot;multi_match&quot;: {&quot;query&quot;: query,
+                &quot;fields&quot;: [&quot;title^2&quot;, &quot;features&quot;, &quot;text&quot;],
+                &quot;type&quot;: &quot;best_fields&quot;}</pre>
+<p><code>title^2</code> doubles the weight of title matches, encoding a reasonable prior:
+a term in the title is more <em>about</em> the document than the same term buried in prose.
+Push the boost too far and every query collapses into title keyword matching.</p>
+
+<h3>Stage 1b — neural (HNSW k-NN)</h3>
+<pre class="code">knn = {&quot;vector&quot;: encode_query(query).tolist(), &quot;k&quot;: k}
+if clauses[&quot;filter&quot;]:
+    knn[&quot;filter&quot;] = {&quot;bool&quot;: {&quot;filter&quot;: clauses[&quot;filter&quot;]}}   # INSIDE the knn clause
+body = {&quot;size&quot;: k, &quot;query&quot;: {&quot;knn&quot;: {&quot;embedding&quot;: knn}}}</pre>
+<div class="why"><strong>The filter placement is the subtle bit</strong>
+Inside the <code>knn</code> clause, OpenSearch applies it <em>during</em> graph traversal
+and keeps walking until it has k survivors. Filter afterwards and a selective filter
+silently returns fewer than k — you asked for 10 and got 3, with nothing to tell you why.</div>
+
+<h3>Stage 2 — must vs should</h3>
+<pre class="code">must   -&gt; clauses[&quot;filter&quot;]   # hard constraint: fail it and the document is GONE
+should -&gt; clauses[&quot;should&quot;]   # soft preference: fail it and you only lose SCORE</pre>
+<p>Range and list values are detected automatically, so <code>{"price": {"gte": 1, "lte": 150}}</code>
+becomes a range query and <code>{"brand": ["Sony", "Bose"]}</code> becomes a terms query.</p>
+
+<h3>Stage 1c — fusing the two lists (RRF)</h3>
+<span class="filemark">search.py — the most interesting 40 lines in the repo</span>
+<pre class="code">for list_idx, (results, weight) in enumerate(zip(result_lists, weights)):
+    for rank, doc in enumerate(results, start=1):
+        fused[doc[&quot;id&quot;]] += weight / (k + rank)          # rank, not score
+        contributions[doc[&quot;id&quot;]][list_idx] = rank        # who found it, and where</pre>
+<p>The formula is <code>score(d) = Σ w<sub>i</sub> / (k + rank<sub>i</sub>(d))</code>.</p>
+<div class="why"><strong>Why rank and not score</strong>
+BM25 scores are unbounded and depend on corpus statistics. Cosine similarities sit in
+[-1, 1]. They are not comparable, and normalising them is guesswork dressed up as maths.
+Rank position is comparable by construction.</div>
+<div class="why"><strong>What k = 60 buys you</strong>
+It damps the advantage of the very top positions. The gap between rank 1 and rank 2 becomes
+small, so a document that <em>both</em> retrievers rank decently beats one that a single
+retriever adores. That is the entire point of hybrid search.</div>
+<p><code>_ranks</code> is kept on every result so you can see the disagreement — that's the
+<code>lex_rank</code> / <code>vec_rank</code> column in notebook 02.</p>
+
+<h3>Stage 3 — the cross-encoder</h3>
+<pre class="code">pairs  = [(query, build_embedding_text(d)) for d in docs]
+scores = model.predict(pairs)
+...
+doc[&quot;_rank_delta&quot;] = doc[&quot;_retrieval_rank&quot;] - new_rank    # how far it moved</pre>
+<div class="why"><strong>Why it can't be precomputed</strong>
+A bi-encoder embeds query and document <em>separately</em> — that separation is exactly
+what lets document vectors be written once at index time. A cross-encoder reads the pair
+<em>jointly</em>, which is far more accurate and impossible to cache. Cost scales with the
+number of candidates, so it only ever sees the shortlist.</div>
+<div class="why"><strong>Don't read the absolute score</strong>
+Those <code>ce=-4.4</code> / <code>ce=+6.4</code> values are raw logits calibrated on
+MS MARCO web passages, not probabilities. Only the ordering is meaningful.</div>
+
+<h3>The trace</h3>
+<p>Every stage appends a <code>StageTrace</code>, which is what prints as:</p>
+<pre class="code">1. retrieve (hybrid)     20 -&gt; 37    top: B08DHR8J7D, B0BZSF2D2M, B09K3FWPGB
+2. trim                  37 -&gt; 12    top: B08DHR8J7D, B0BZSF2D2M, B09K3FWPGB
+3. rerank (cross-enc)    10 -&gt; 10    top: B0BRX58THH, B09CGS4X1C, B07VXLVHGL
+4. final                 10 -&gt; 5     top: B0BRX58THH, B09CGS4X1C, B07VXLVHGL</pre>
+<p>Stage 1 can return <em>more</em> than <code>k</code> — that is RRF taking the union of
+two lists of 20. And notice the top document changes at stage 3: that is the reranker
+earning its cost.</p>
+
+<h2 id="knobs">4 · Every knob, and what turning it does</h2>
+<span class="filemark">config.py</span>
+<div class="tablewrap"><table>
+<thead><tr><th>Knob</th><th>Default</th><th>Raise it and…</th><th>Changeable after indexing?</th></tr></thead>
+<tbody>
+<tr><td class="name">m</td><td class="num">16</td><td>denser graph, better recall, more memory</td><td><span class="chip avoid">No — reindex</span></td></tr>
+<tr><td class="name">ef_construction</td><td class="num">128</td><td>better graph quality, slower indexing</td><td><span class="chip avoid">No — reindex</span></td></tr>
+<tr><td class="name">ef_search</td><td class="num">100</td><td>better recall, slower queries</td><td><span class="chip keep">Yes — live</span></td></tr>
+<tr><td class="name">engine</td><td class="num">lucene</td><td>faiss is GPU-optimised; lucene is CPU-optimised</td><td><span class="chip avoid">No — reindex</span></td></tr>
+<tr><td class="name">candidates</td><td class="num">20</td><td>wider net, more for the reranker to chew</td><td><span class="chip keep">Yes</span></td></tr>
+<tr><td class="name">rerank_top_k</td><td class="num">10</td><td>better ranking, linearly more latency</td><td><span class="chip keep">Yes</span></td></tr>
+<tr><td class="name">rrf_k</td><td class="num">60</td><td>flatter fusion — top ranks matter less</td><td><span class="chip keep">Yes</span></td></tr>
+</tbody></table></div>
+<p>Notebook 02 sweeps <code>ef_search</code> against exact k-NN to show the recall-versus-latency
+curve directly — the knee of that curve is where you should actually set it.</p>
+
+<h2 id="esci">5 · The ESCI dataset, decoded</h2>
+<p>Three <em>independent</em> filters select a slice — they are not three datasets.</p>
+<pre class="code">locale   us / jp / es              -&gt; we use `us`
+version  small_version / large     -&gt; `small` is Amazon&#x27;s official Task 1 subset,
+                                      a curated harder task, NOT a random sample
+split    train / test              -&gt; the official benchmark division</pre>
+<div class="why"><strong>We index both splits, score only test</strong>
+The split governs which <em>queries</em> you score, not which <em>documents</em> exist.
+Indexing train-split products gives the test queries a realistic haystack to be found in.
+Those extra products are unjudged rather than known-irrelevant, so NDCG reads as a floor —
+standard practice, but don't compare the number to a leaderboard computed over a different corpus.</div>
+<p>Nothing in our pipeline was trained on ESCI — BM25 has no learned parameters, MiniLM was
+pretrained elsewhere, the cross-encoder was trained on MS MARCO — so the test split is clean
+without holding anything back. The train split matters later, for fine-tuning.</p>
+<p><code>esci.py</code> writes two files: the corpus, and a qrels file mapping each test query
+to its judged documents with both gain scales:</p>
+<pre class="code">LABEL_GAIN   = {&quot;E&quot;: 1.0, &quot;S&quot;: 0.1, &quot;C&quot;: 0.01, &quot;I&quot;: 0.0}   # the paper&#x27;s weighting
+LABEL_GRADED = {&quot;E&quot;: 3,   &quot;S&quot;: 2,   &quot;C&quot;: 1,    &quot;I&quot;: 0}     # the common alternative</pre>
+<p>E = Exact, S = Substitute, C = Complement, I = Irrelevant. Which gain scale you choose
+changes absolute NDCG but rarely the ordering of two systems.</p>
+
+<h2 id="reading">6 · Reading order and exercises</h2>
+<div class="flow">
+  <div class="step"><span class="who">pipeline.py</span><span class="what">93 lines, the whole story. Start here.</span></div>
+  <div class="step"><span class="who">search.py</span><span class="what">the two retrievers and RRF — the conceptual core.</span></div>
+  <div class="step"><span class="who">embed.py</span><span class="what">62 lines; the truncation decisions live here.</span></div>
+  <div class="step"><span class="who">schema.py</span><span class="what">three mappings sharing one base. Read build_mapping, skim the rest.</span></div>
+  <div class="step"><span class="who">config.py</span><span class="what">every knob, documented in place.</span></div>
+  <div class="step"><span class="who">demo.py / client.py</span><span class="what">CLI glue and a connection retry loop. Skip unless curious.</span></div>
+</div>
+
+<h3>Things worth breaking on purpose</h3>
+<ol class="steps">
+  <li>Set <code>rrf_k</code> to 1 and re-run a hybrid query. Fusion becomes winner-take-all
+      and the whole benefit of hybrid evaporates — watch documents found by both retrievers
+      lose to a single list's favourite.</li>
+  <li>Move the filter <em>outside</em> the <code>knn</code> clause in <code>neural_search</code>,
+      then run a selective filter. Count the results: fewer than k, silently.</li>
+  <li>Reverse the order in <code>build_embedding_text</code> so description comes first,
+      reindex a few thousand docs, and compare neural results. With 42% of ESCI truncating,
+      the difference is real.</li>
+  <li>Set <code>do_rerank=False</code> and compare the top 5. If the cross-encoder is not
+      changing anything, your retrieval is either already excellent or already broken.</li>
+</ol>
+
+<footer class="method">
+  Code as of the current commit on <code>main</code> of
+  <code>github.com/irafayabdul/search-playground</code>. Companion pages:
+  “Search Dataset Verdict” and “Search Tooling Landscape”. Notebooks
+  <code>01_index_and_search</code> and <code>02_hybrid_rrf_rerank</code> run every
+  idea above against the live index.
+</footer>
+</main>

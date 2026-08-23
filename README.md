@@ -109,6 +109,12 @@ scripts/rebuild.sh amazon     # ... with the 94k Appliances corpus
 
 ---
 
+## Understanding the code
+
+`docs/code-walkthrough.html` walks every module in the order data moves through it —
+index-time flow, query-time funnel, every tunable knob, and the reasoning behind each
+decision. Read it alongside the notebooks.
+
 ## Why both `.py` and `.ipynb`
 
 The logic is in `src/opensearch_demo/`; the notebooks import it and narrate.
