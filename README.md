@@ -80,8 +80,32 @@ Or headless, to check everything works end to end:
 .venv/bin/python -m opensearch_demo.demo "how do I make vector search faster"
 ```
 
-**Teardown:** `docker compose -f docker/docker-compose.yml down -v`
-(`-v` drops the index volume too).
+### Teardown and rebuild
+
+Nothing here is precious — every byte is reproducible from this repo. Reclaim
+disk after a session:
+
+```bash
+scripts/teardown.sh              # containers + index volume        (~1.1 GB)
+scripts/teardown.sh --data       # + downloaded datasets            (~0.4 GB)
+scripts/teardown.sh --venv       # + the virtualenv                 (~1.2 GB)
+scripts/teardown.sh --images     # + the two OpenSearch images      (~2.8 GB)
+scripts/teardown.sh --models     # + HuggingFace cache              (~0.6 GB)
+scripts/teardown.sh --all        # everything
+```
+
+Two tiers are opt-in because they touch machine-wide state other projects share:
+`--models` clears the HuggingFace cache (anything else on this machine
+re-downloads its models), and `--images` removes Docker images. `--images` is
+deliberately scoped to our two tags rather than `docker system prune -a`, which
+would take unrelated images with it.
+
+Coming back:
+
+```bash
+scripts/rebuild.sh            # venv + deps + cluster + toy corpus
+scripts/rebuild.sh amazon     # ... with the 94k Appliances corpus
+```
 
 ---
 
