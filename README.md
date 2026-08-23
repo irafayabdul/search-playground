@@ -59,9 +59,17 @@ uv pip install --python .venv/bin/python -e .
 .venv/bin/jupyter lab
 ```
 
-Start with `notebooks/01_index_and_search.ipynb`.
+Start with `notebooks/01_index_and_search.ipynb`, then `02_hybrid_rrf_rerank`, then `03_evaluation` (needs the ESCI corpus).
 
-**4. The real corpus** — one category of
+**4. The evaluation corpus** — ESCI (Amazon Shopping Queries), 482k products with
+8,956 judged test queries. This is what makes NDCG computable:
+
+```bash
+.venv/bin/python -m opensearch_demo.esci                                     # ~5 min
+.venv/bin/python -m opensearch_demo.demo --dataset esci --rebuild "warm up"  # ~90 min
+```
+
+**5. The demo corpus** — one category of
 [McAuley-Lab/Amazon-Reviews-2023](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023)
 (default: Appliances, 94k products — chosen after measuring text richness across
 six candidate categories; see `docs/research/datasets.html`):
