@@ -64,7 +64,7 @@ Start with `notebooks/01_index_and_search.ipynb`.
 **4. The real corpus** — one category of
 [McAuley-Lab/Amazon-Reviews-2023](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023)
 (default: Appliances, 94k products — chosen after measuring text richness across
-six candidate categories; see `docs/research/datasets.md`):
+six candidate categories; see `docs/research/datasets.html`):
 
 ```bash
 .venv/bin/python -m opensearch_demo.amazon                       # download + clean (~272 MB)

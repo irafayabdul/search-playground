@@ -1,0 +1,315 @@
+<title>Search Dataset Verdict</title>
+<style>
+:root {
+  --paper:#FAFBFC; --surface:#FFFFFF; --ink:#1B2430; --muted:#5C6675;
+  --line:#DBE0E7; --accent:#0E7A6F; --accent-ink:#0A5A52; --accent-soft:#EDF5F3;
+  --warn:#B4540A; --warn-soft:#F9EFE6; --chip-skip:#EEF1F4;
+  --display:"Seravek","Gill Sans","Gill Sans MT","Trebuchet MS","Segoe UI",sans-serif;
+  --body:"Charter","Bitstream Charter","Iowan Old Style","Sitka Text",Cambria,Georgia,serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:#10151D; --surface:#161D27; --ink:#E6EBF1; --muted:#96A1B0;
+    --line:#2A3340; --accent:#45BFB0; --accent-ink:#7DD6CA; --accent-soft:#152520;
+    --warn:#DF8B4E; --warn-soft:#2A1F15; --chip-skip:#1E2631;
+  }
+}
+:root[data-theme="dark"] {
+  --paper:#10151D; --surface:#161D27; --ink:#E6EBF1; --muted:#96A1B0;
+  --line:#2A3340; --accent:#45BFB0; --accent-ink:#7DD6CA; --accent-soft:#152520;
+  --warn:#DF8B4E; --warn-soft:#2A1F15; --chip-skip:#1E2631;
+}
+* { box-sizing:border-box; }
+body {
+  background:var(--paper); color:var(--ink); font-family:var(--body);
+  font-size:16px; line-height:1.55; margin:0; padding:0 20px 72px;
+}
+main { max-width:900px; margin:0 auto; }
+header.page { padding:48px 0 8px; border-bottom:2px solid var(--ink); margin-bottom:28px; }
+.eyebrow {
+  font-family:var(--display); font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted); display:flex; flex-wrap:wrap;
+  gap:6px 14px; align-items:center; margin-bottom:14px;
+}
+.eyebrow .check {
+  color:var(--accent-ink); background:var(--accent-soft);
+  padding:2px 9px; border-radius:2px; letter-spacing:.1em;
+}
+h1 {
+  font-family:var(--display); font-weight:600; font-size:clamp(26px,4.5vw,34px);
+  line-height:1.12; margin:0 0 10px; text-wrap:balance; letter-spacing:-.01em;
+}
+.standfirst { font-size:17px; color:var(--muted); max-width:64ch; margin:0 0 26px; }
+h2 {
+  font-family:var(--display); font-weight:600; font-size:20px; margin:44px 0 12px;
+  letter-spacing:-.005em;
+}
+h3 { font-family:var(--display); font-weight:600; font-size:16px; margin:26px 0 6px; }
+p { max-width:70ch; margin:0 0 14px; }
+a { color:var(--accent-ink); text-decoration-thickness:1px; text-underline-offset:2px; }
+.verdict {
+  background:var(--accent-soft); border-left:3px solid var(--accent);
+  padding:20px 24px; margin:0 0 8px;
+}
+.verdict h2 { margin:0 0 10px; font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-ink); }
+.verdict p { margin:0 0 10px; }
+.verdict p:last-child { margin:0; }
+.callout {
+  background:var(--warn-soft); border-left:3px solid var(--warn);
+  padding:18px 22px; margin:18px 0;
+}
+.callout .tag { font-family:var(--display); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--warn); display:block; margin-bottom:8px; }
+.callout p { margin:0 0 10px; } .callout p:last-child { margin:0; }
+.tablewrap { overflow-x:auto; margin:14px 0 6px; border:1px solid var(--line); background:var(--surface); }
+table { border-collapse:collapse; width:100%; font-size:14px; }
+th {
+  font-family:var(--display); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--muted); text-align:left; padding:10px 14px; border-bottom:2px solid var(--line);
+  white-space:nowrap;
+}
+td { padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+tr:last-child td { border-bottom:none; }
+td.num, .num { font-family:var(--mono); font-size:12.5px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+td.name { font-family:var(--display); font-weight:600; font-size:13.5px; white-space:nowrap; }
+.chip {
+  font-family:var(--display); display:inline-block; font-size:10.5px; font-weight:600;
+  letter-spacing:.1em; text-transform:uppercase; padding:2px 8px; border-radius:2px; white-space:nowrap;
+}
+.chip.keep, .chip.adopt { background:var(--accent-soft); color:var(--accent-ink); }
+.chip.keep { outline:1px solid var(--accent); }
+.chip.note { background:transparent; color:var(--muted); outline:1px solid var(--line); }
+.chip.skip { background:var(--chip-skip); color:var(--muted); }
+.chip.avoid { background:var(--warn-soft); color:var(--warn); }
+.mark { font-size:15px; line-height:1; }
+.mark.full { color:var(--accent); } .mark.part { color:var(--muted); } .mark.none { color:var(--warn); }
+.legend { font-family:var(--display); font-size:12px; color:var(--muted); margin:4px 0 0; }
+.card {
+  background:var(--surface); border:1px solid var(--line); padding:20px 24px; margin:16px 0;
+}
+.card header { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:baseline; margin-bottom:8px; }
+.card h3 { margin:0; font-size:17px; }
+.facts { display:grid; grid-template-columns:max-content 1fr; gap:5px 18px; margin:12px 0; font-size:14px; }
+.facts dt { font-family:var(--display); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding-top:2px; }
+.facts dd { margin:0; }
+.fit { border-top:1px solid var(--line); padding-top:10px; font-size:14.5px; }
+.fit strong { font-family:var(--display); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-ink); }
+ol.steps { counter-reset:step; list-style:none; padding:0; max-width:76ch; }
+ol.steps li {
+  counter-increment:step; position:relative; padding:0 0 14px 44px; font-size:14.5px;
+}
+ol.steps li::before {
+  content:counter(step); position:absolute; left:0; top:1px;
+  font-family:var(--mono); font-size:12px; color:var(--accent-ink);
+  background:var(--accent-soft); width:26px; height:26px; border-radius:2px;
+  display:flex; align-items:center; justify-content:center;
+}
+code { font-family:var(--mono); font-size:.85em; background:var(--chip-skip); padding:1px 5px; border-radius:2px; }
+footer.method {
+  margin-top:52px; padding-top:16px; border-top:1px solid var(--line);
+  font-family:var(--display); font-size:12.5px; color:var(--muted); max-width:76ch;
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior:smooth; } }
+
+details.src { border:1px solid var(--line); background:var(--surface); margin:8px 0; }
+details.src > summary {
+  cursor:pointer; padding:9px 14px; font-family:var(--display); font-size:12.5px;
+  font-weight:600; color:var(--accent-ink); list-style:none;
+}
+details.src > summary::-webkit-details-marker { display:none; }
+details.src > summary::before { content:"\25B8  "; color:var(--muted); }
+details.src[open] > summary::before { content:"\25BE  "; }
+details.src > summary:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+details.src .inner { padding:2px 14px 12px; }
+ul.cites { margin:0; padding-left:18px; font-size:13px; line-height:1.5; }
+ul.cites li { margin-bottom:5px; overflow-wrap:anywhere; }
+.vtable td.claim { font-size:13px; }
+.appendix-note { font-size:14px; color:var(--muted); max-width:70ch; }
+.srcline { font-family:var(--mono); font-size:11px; color:var(--muted); display:block; margin-top:3px; overflow-wrap:anywhere; }
+</style>
+<main>
+<header class="page">
+  <div class="eyebrow">
+    <span>Search Project · Research Record</span><span>22 Aug 2026</span>
+    <span class="check">12 claim clusters verified · 0 wrong</span>
+  </div>
+  <h1>Search Dataset Verdict</h1>
+  <p class="standfirst">Nine candidate datasets for the hybrid-search demo and the
+  upcoming evaluation session, scored against five hard constraints. Two research
+  agents; every load-bearing number re-checked on primary sources.</p>
+</header>
+
+<section class="verdict">
+  <h2>Verdict</h2>
+  <p><strong>Primary — ESCI, US-small slice, enriched with ESCI-S</strong> (both Apache-2.0).
+  The only candidate that clears all five bars at once: 29,844 real Amazon queries with
+  601,354 graded E/S/C/I judgments — the raw material NDCG needs — over products with
+  measured-rich text (median 851 chars), cuttable to laptop size along query boundaries.</p>
+  <p><strong>Runner-up — WANDS</strong> (Wayfair, MIT): 43k products, 480 queries, 233k dense
+  judgments, &lt;100&nbsp;MB, zero friction. The fallback if ESCI feels heavy.</p>
+  <p><strong>Already built — Appliances (McAuley)</strong> stays as the interactive demo corpus;
+  it has no queries, so it cannot carry the evaluation session alone.
+  <strong>Kaggle UK is retired</strong>: no judgments, title-only text.</p>
+  <p><em>Final call: Abdul — pending.</em></p>
+</section>
+
+<h2>Scorecard</h2>
+<div class="tablewrap"><table>
+  <thead><tr><th>Candidate</th><th>Laptop-size</th><th>Queries + judgments</th>
+  <th>Filterable metadata</th><th>Text richness</th><th>License</th></tr></thead>
+  <tbody>
+  <tr><td class="name">ESCI + ESCI-S</td>
+      <td><span class="mark full">●</span> 58k–482k, you pick the cut</td>
+      <td><span class="mark full">●</span> graded, 601k (US-small)</td>
+      <td><span class="mark part">◐</span> via ESCI-S join (91.5%)</td>
+      <td><span class="mark full">●</span> median 851 chars</td>
+      <td><span class="mark full">●</span> Apache-2.0</td></tr>
+  <tr><td class="name">WANDS</td>
+      <td><span class="mark full">●</span> 43k docs, &lt;100 MB</td>
+      <td><span class="mark part">◐</span> graded, dense, but 480 queries</td>
+      <td><span class="mark part">◐</span> class/rating/attrs, no price</td>
+      <td><span class="mark full">●</span> desc 86%, features 100%</td>
+      <td><span class="mark full">●</span> MIT</td></tr>
+  <tr><td class="name">McAuley (1 category)</td>
+      <td><span class="mark full">●</span> 94k (Appliances)</td>
+      <td><span class="mark none">○</span> none</td>
+      <td><span class="mark full">●</span> price/rating/tree/store</td>
+      <td><span class="mark full">●</span> median 115 words</td>
+      <td><span class="mark part">◐</span> non-commercial-ish</td></tr>
+  <tr><td class="name">Kaggle Amazon UK</td>
+      <td><span class="mark part">◐</span> 2.2M — subsample anyway</td>
+      <td><span class="mark none">○</span> none</td>
+      <td><span class="mark full">●</span> price/stars/category</td>
+      <td><span class="mark none">○</span> title only</td>
+      <td><span class="mark full">●</span> ODC-By</td></tr>
+  </tbody>
+</table></div>
+<p class="legend">● meets the bar &nbsp;·&nbsp; ◐ partial &nbsp;·&nbsp; ○ fails — details per candidate below</p>
+
+<h2>The four finalists</h2>
+
+<article class="card">
+  <header><h3>Amazon Shopping Queries — ESCI</h3><span class="chip adopt">Primary</span></header>
+  <dl class="facts">
+    <dt>Source</dt><dd><a href="https://github.com/amazon-science/esci-data">amazon-science/esci-data</a> · Apache-2.0</dd>
+    <dt>Judgments</dt><dd class="num">large: 130,652 q / 2,621,288 j · US-small: 29,844 q / 601,354 j</dd>
+    <dt>Corpus</dt><dd class="num">1,814,924 products · US-small slice: 482,105 · test-split only: 164,900</dd>
+    <dt>Download</dt><dd class="num">examples 49 MB + products 1.03 GB (byte-verified)</dd>
+    <dt>Text</dt><dd>title 100% · bullets 85.3% (med. 572 ch) · description 53.1% (med. 744 ch)</dd>
+    <dt>Embedding cost</dt><dd>3,000-query dev sample = 58,554 docs ≈ 35 min CPU · test split ≈ 1.5–2 h</dd>
+  </dl>
+  <p class="fit"><strong>Fit</strong> — Graded 4-level labels (Exact / Substitute / Complement /
+  Irrelevant) with official train/test splits: purpose-built for NDCG now and for
+  loss-function training later. Native metadata is thin (brand, color) — the ESCI-S
+  enrichment below fixes that. The one candidate that scores on all five criteria.</p>
+</article>
+
+<article class="card">
+  <header><h3>WANDS — Wayfair Annotation Dataset</h3><span class="chip adopt">Runner-up</span></header>
+  <dl class="facts">
+    <dt>Source</dt><dd><a href="https://github.com/wayfair/WANDS">wayfair/WANDS</a> · MIT</dd>
+    <dt>Judgments</dt><dd class="num">480 queries · 233,448 graded (Exact/Partial/Irrelevant) ≈ 486 per query</dd>
+    <dt>Corpus</dt><dd class="num">42,994 products · whole dataset &lt; 100 MB, plain TSV</dd>
+    <dt>Text</dt><dd>description 86% (med. 418 ch) · features 100% (med. 1,494 ch, parseable key:value)</dd>
+    <dt>Metadata</dt><dd>class 93.4% · category path 96.4% · ratings 78% · <em>no price</em></dd>
+  </dl>
+  <p class="fit"><strong>Fit</strong> — Unusually dense judgment pools make it the cleanest NDCG
+  teaching set anywhere, and the friction is near zero. Limits: 480 queries is thin for
+  training experiments, and the domain is furniture rather than general e-commerce.</p>
+</article>
+
+<article class="card">
+  <header><h3>McAuley Amazon-Reviews-2023, one category</h3><span class="chip keep">Built · demo corpus</span></header>
+  <dl class="facts">
+    <dt>Source</dt><dd><a href="https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023">McAuley-Lab/Amazon-Reviews-2023</a></dd>
+    <dt>In the index</dt><dd class="num">Appliances: 94,313 products, indexed 22 Aug (272 MB raw)</dd>
+    <dt>Judgments</dt><dd>none — 571.5M reviews exist, but reviews are not relevance labels</dd>
+    <dt>Text</dt><dd>measured: desc 68% · features 85% · median 115 words · category tree 96%</dd>
+  </dl>
+  <p class="fit"><strong>Fit</strong> — Everything the interactive demo needs (rich text, real
+  must/should/range filters), nothing the evaluation session needs. Keep it for search;
+  pair it with a judged dataset for metrics.</p>
+</article>
+
+<article class="card">
+  <header><h3>Kaggle Amazon UK Products 2023</h3><span class="chip avoid">Retired</span></header>
+  <dl class="facts">
+    <dt>Source</dt><dd><a href="https://www.kaggle.com/datasets/asaniczka/amazon-uk-products-dataset-2023">asaniczka on Kaggle</a> · ODC-By</dd>
+    <dt>Size</dt><dd class="num">2.2M rows · 131 MB zip → 621 MiB csv (the “~750 MB” estimate, resolved)</dd>
+    <dt>Fields</dt><dd>title, price, stars, reviews, categoryName, isBestSeller — <em>no description</em></dd>
+  </dl>
+  <p class="fit"><strong>Fit</strong> — Title-only text starves the embedding side, and zero
+  queries/judgments starves the eval session. Excellent filter columns are not enough
+  to carry either story.</p>
+</article>
+
+<h2>The join problem — and why ESCI-S, not McAuley</h2>
+<p>The obvious idea — enrich ESCI queries with the McAuley metadata we already use — 
+<strong>mostly fails on a key mismatch</strong>: ESCI's <code>product_id</code> is a variant-level ASIN,
+McAuley collapses to <code>parent_asin</code>.</p>
+<div class="callout"><span class="tag">Measured, not assumed</span>
+  <p>Empirical join test: of <span class="num">94,327</span> Appliances parent ASINs,
+  just <span class="num">1,767</span> matched ESCI-US-large product IDs —
+  <span class="num">771</span> in US-small. Per-category overlap is inherently tiny;
+  no overall overlap fraction is documented anywhere. Our freshly built Appliances index
+  therefore cannot serve as the judged corpus.</p>
+</div>
+<p>The proven route is <a href="https://github.com/shuttie/esci-s"><strong>ESCI-S</strong></a> (Apache-2.0):
+a purpose-built scrape of the actual ESCI ASINs covering <span class="num">1.66M of 1.81M</span>
+products (91.5%), adding price, stars, ratings count, category tree, and attributes.
+Shortcut if we want zero joins: <a href="https://huggingface.co/datasets/metarank/esci">metarank/esci</a>
+ships ESCI + ESCI-S pre-merged, also Apache-2.0.</p>
+
+<h2>Load plan (primary path)</h2>
+<ol class="steps">
+  <li>Pull <code>examples.parquet</code> (49 MB) and <code>products.parquet</code> (1.03 GB) from
+      <code>amazon-science/esci-data</code>; start ESCI-S from its 10 MB sample before the 3.4 GB full dump.</li>
+  <li>Qrels = rows with <code>product_locale == "us"</code> and <code>small_version == 1</code>;
+      for development keep <code>split == "test"</code> → 8,956 queries / 181,701 judgments / 164,900 products
+      (or sample 3,000 queries → 58,554 products, ≈ 35 min embedding).</li>
+  <li>Corpus = products joined on those IDs; embed <code>title + bullets + description</code>,
+      title first — the 256-token window truncates the tail.</li>
+  <li>Stream ESCI-S, keep matching ASINs, parse display strings
+      (<code>"4.3 out of 5 stars" → 4.3</code>) into the existing must/should/range filter fields.</li>
+  <li>Map E/S/C/I → gains (paper: 1.0/0.1/0.01/0.0; common: 3/2/1/0) and score
+      NDCG@10 / recall@100; train/test split comes free for the loss-function session.</li>
+</ol>
+
+<h2>Also surveyed</h2>
+<div class="tablewrap"><table>
+  <thead><tr><th>Dataset</th><th>Judgments</th><th>Why not primary</th></tr></thead>
+  <tbody>
+  <tr><td class="name">Home Depot (Kaggle 2016)</td><td>graded, ≥3 raters</td>
+      <td>competition-only redistribution terms — blocked for a shared repo; decade-old vocabulary</td></tr>
+  <tr><td class="name">MS MARCO passages</td><td>binary, sparse</td>
+      <td>wrong domain, no product metadata, non-commercial; keep as vocabulary reference</td></tr>
+  <tr><td class="name">BEIR suite</td><td>15+ sets, standardized</td>
+      <td>no product metadata — but its corpus/queries/qrels JSONL layout is worth imitating</td></tr>
+  <tr><td class="name">Amazon-C4</td><td>binary, synthetic (21k)</td>
+      <td>single-gold labels, unclear license; good “semantic search shines” showcase only</td></tr>
+  <tr><td class="name">TREC Product Search 23/24</td><td>graded, NIST-pooled</td>
+      <td>not a starting point — but a free second eval layer over ESCI if we adopt it</td></tr>
+  </tbody>
+</table></div>
+
+<h2>Sources</h2>
+<p class="appendix-note">Every figure on this page traces to one of these. Numbers described as computed locally were recalculated by the verifier from the downloaded files rather than taken from documentation.</p>
+<details class="src"><summary>Amazon Shopping Queries / ESCI (amazon-science/esci-data) — 4 sources</summary><div class="inner"><ul class="cites"><li><a href="https://github.com/amazon-science/esci-data (README stats tables, file layout, Apache-2.0)">https://github.com/amazon-science/esci-data (README stats tables, file layout, Apache-2.0)</a></li><li><a href="https://arxiv.org/abs/2206.06588 (dataset paper)">https://arxiv.org/abs/2206.06588 (dataset paper)</a></li><li>product/query/judgment counts, label distribution, text-coverage percentages: computed locally from shopping_queries_dataset_examples.parquet and shopping_queries_dataset_products.parquet downloaded 2026-08-22</li><li>file sizes: HTTP HEAD on https://media.githubusercontent.com/media/amazon-science/esci-data/main/shopping_queries_dataset/</li></ul></div></details>
+<details class="src"><summary>WANDS — Wayfair Annotation Dataset — 4 sources</summary><div class="inner"><ul class="cites"><li><a href="https://github.com/wayfair/WANDS (files, LICENSE)">https://github.com/wayfair/WANDS (files, LICENSE)</a></li><li><a href="https://www.aboutwayfair.com/careers/tech-blog/wayfair-releases-wands-the-largest-and-richest-publicly-available-dataset-for-e-commerce-product-search-relevance (42,994 / 480 / 233,448)">https://www.aboutwayfair.com/careers/tech-blog/wayfair-releases-wands-the-largest-and-richest-publicly-available-dataset-for-e-commerce-product-search-relevance (42,994 / 480 / 233,448)</a></li><li><a href="https://paperswithcode.com/dataset/wands">https://paperswithcode.com/dataset/wands</a></li><li>field coverage/lengths and product count: computed locally from product.csv downloaded 2026-08-22; file sizes via HTTP HEAD on raw.githubusercontent.com</li></ul></div></details>
+<details class="src"><summary>Amazon UK Products 2023 (asaniczka, Kaggle) — 2 sources</summary><div class="inner"><ul class="cites"><li><a href="https://www.kaggle.com/api/v1/datasets/view/asaniczka/amazon-uk-products-dataset-2023 (license ODC-By, totalBytes 651,062,977, fetched 2026-08-22)">https://www.kaggle.com/api/v1/datasets/view/asaniczka/amazon-uk-products-dataset-2023 (license ODC-By, totalBytes 651,062,977, fetched 2026-08-22)</a></li><li><a href="https://www.kaggle.com/datasets/asaniczka/amazon-uk-products-dataset-2023/croissant/download (131.107 MB zip, column schema)">https://www.kaggle.com/datasets/asaniczka/amazon-uk-products-dataset-2023/croissant/download (131.107 MB zip, column schema)</a></li></ul></div></details>
+<details class="src"><summary>Amazon Reviews 2023 (McAuley-Lab), one metadata category — 4 sources</summary><div class="inner"><ul class="cites"><li><a href="https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023 (fields, totals, load_dataset usage)">https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023 (fields, totals, load_dataset usage)</a></li><li><a href="https://amazon-reviews-2023.github.io/ (category table, per-category download URLs)">https://amazon-reviews-2023.github.io/ (category table, per-category download URLs)</a></li><li><a href="https://github.com/hyp1231/AmazonReviews2023 (MIT code, citation request, no dataset license)">https://github.com/hyp1231/AmazonReviews2023 (MIT code, citation request, no dataset license)</a></li><li>Appliances field-coverage percentages: computed locally from meta_Appliances.jsonl.gz downloaded 2026-08-22; file sizes via HTTP HEAD</li></ul></div></details>
+<details class="src"><summary>Home Depot Product Search Relevance (Kaggle competition, 2016) — 3 sources</summary><div class="inner"><ul class="cites"><li><a href="https://www.kaggle.com/c/home-depot-product-search-relevance">https://www.kaggle.com/c/home-depot-product-search-relevance</a></li><li><a href="https://github.com/ChenglongChen/kaggle-HomeDepot (3rd-place solution documenting data shape)">https://github.com/ChenglongChen/kaggle-HomeDepot (3rd-place solution documenting data shape)</a></li><li><a href="https://medium.com/data-science/modeling-product-search-relevance-in-e-commerce-home-depot-case-study-8ccb56fbc5ab (relevance = avg of ≥3 raters, 1–3 scale)">https://medium.com/data-science/modeling-product-search-relevance-in-e-commerce-home-depot-case-study-8ccb56fbc5ab (relevance = avg of ≥3 raters, 1–3 scale)</a></li></ul></div></details>
+<details class="src"><summary>MS MARCO Passage Ranking — 2 sources</summary><div class="inner"><ul class="cites"><li><a href="https://microsoft.github.io/msmarco/ (8.8M passages, non-commercial terms, TREC-DL 2019/2020)">https://microsoft.github.io/msmarco/ (8.8M passages, non-commercial terms, TREC-DL 2019/2020)</a></li><li>collection size via HTTP HEAD 2026-08-22</li></ul></div></details>
+<details class="src"><summary>BEIR benchmark suite — 1 source</summary><div class="inner"><ul class="cites"><li><a href="https://github.com/beir-cellar/beir (README, dataset roster)">https://github.com/beir-cellar/beir (README, dataset roster)</a></li></ul></div></details>
+<details class="src"><summary>Amazon-C4 (McAuley-Lab, BLaIR) — 2 sources</summary><div class="inner"><ul class="cites"><li><a href="https://huggingface.co/datasets/McAuley-Lab/Amazon-C4 (21,223 queries, 1.06M pool, generation method)">https://huggingface.co/datasets/McAuley-Lab/Amazon-C4 (21,223 queries, 1.06M pool, generation method)</a></li><li><a href="https://arxiv.org/abs/2403.03952 (BLaIR paper)">https://arxiv.org/abs/2403.03952 (BLaIR paper)</a></li></ul></div></details>
+<details class="src"><summary>TREC Product Search Track 2023/2024 (bonus find) — 3 sources</summary><div class="inner"><ul class="cites"><li><a href="https://trec-product-search.github.io/">https://trec-product-search.github.io/</a></li><li><a href="https://arxiv.org/abs/2311.07861 (track overview)">https://arxiv.org/abs/2311.07861 (track overview)</a></li><li><a href="https://huggingface.co/datasets/trec-product-search/product-search-corpus">https://huggingface.co/datasets/trec-product-search/product-search-corpus</a></li></ul></div></details>
+<details class="src"><summary>ESCI to metadata join — 4 sources</summary><div class="inner"><ul class="cites"><li><a href="https://github.com/shuttie/esci-s (91.5%, 1.66M/1.81M, field list, 3.4GB, Apache-2.0)">https://github.com/shuttie/esci-s (91.5%, 1.66M/1.81M, field list, 3.4GB, Apache-2.0)</a></li><li><a href="https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/discussions/2 (parent_asin join recommendation)">https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/discussions/2 (parent_asin join recommendation)</a></li><li><a href="https://huggingface.co/datasets/metarank/esci (pre-joined ESCI+ESCI-S)">https://huggingface.co/datasets/metarank/esci (pre-joined ESCI+ESCI-S)</a></li><li>Appliances-vs-ESCI overlap counts (1,767 / 771): computed locally 2026-08-22 from meta_Appliances.jsonl.gz x shopping_queries_dataset_examples.parquet</li></ul></div></details>
+<h2>Verification record</h2><p class="appendix-note">High — exceptionally so. All 12 load-bearing claim clusters checked out: every README/API number matched verbatim on the primary source, all seven HTTP file sizes were byte-exact (ESCI examples/products parquets, WANDS three CSVs, McAuley two category files, MS MARCO collection, ESCI-S S3 dump), and every &#x27;computed locally&#x27; figure — US-small label distribution, test-split slice, unique-product counts, and the decisive ESCI-vs-McAuley Appliances join overlap (1,767/771) — reproduced exactly when I re-downloaded the data and recomputed independently. No claim was found wrong. Unchecked residue is minor and non-decisional: text-richness medians (would need the 1 GB products download; everything around them reproduced), Home Depot and TREC details (both marked non-picks by the research itself), and the Kaggle 131 MB zip figure. Two nuances worth carrying forward: (1) the ESCI-S dump is 3.62 decimal GB (3.37 GiB), so budget ~3.6 GB, and (2) the McAuley dataset is best described as &#x27;no license at all&#x27; rather than &#x27;non-commercial&#x27; — the card states no usage terms, only a citation request. The recommendation&#x27;s factual basis (ESCI+ESCI-S primary, WANDS runner-up, direct McAuley join infeasible at scale) is fully supported by the verified evidence.</p><div class="tablewrap"><table class="vtable"><thead><tr><th>Claim checked</th><th>Verdict</th><th>Note</th></tr></thead><tbody><tr><td class="claim">ESCI counts: large 130,652 queries / 2,621,288 judgments; small 48,300 / 1,118,011; US-small 29,844 queries / 601,354 judgments<span class="srcline">https://github.com/amazon-science/esci-data (README tables); recomputation from shopping_queries_dataset_examples.parquet downloaded 2026-08-22</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. GitHub README states all six numbers verbatim, and I independently recomputed 130,652 / 2,621,288, 48,300 / 1,118,011, and 29,844 / 601,354 from a freshly downloaded examples.parquet.</td></tr><tr><td class="claim">ESCI license is Apache-2.0<span class="srcline">https://github.com/amazon-science/esci-data</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. README states &#x27;This project is licensed under the Apache-2.0 License.&#x27;</td></tr><tr><td class="claim">ESCI download sizes: examples parquet 51,286,808 B (~49 MB); products parquet 1,108,857,465 B (~1.03 GiB)<span class="srcline">HTTP HEAD on https://media.githubusercontent.com/media/amazon-science/esci-data/main/shopping_queries_dataset/ 2026-08-22</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. HTTP HEAD on media.githubusercontent.com returned Content-Length 51286808 and 1108857465 — byte-exact matches.</td></tr><tr><td class="claim">products.parquet has 1,814,924 rows with fields product_id, product_title, product_description, product_bullet_point, product_brand, product_color, product_locale<span class="srcline">Parquet footer metadata parsed from HTTP range fetch of shopping_queries_dataset_products.parquet, 2026-08-22</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. Parquet footer (fetched via HTTP range request) reports num_rows=1814924 and exactly those seven columns. Minor aside: the ESCI-S README says &#x27;1814925 ASINs&#x27; — an off-by-one vs the parquet row count, immaterial either way.</td></tr><tr><td class="claim">Locally-computed ESCI slices: US-small label dist E 261,527 / S 211,191 / I 101,447 / C 27,189; US-small products 482,105; test split 8,956 queries / 181,701 judgments / 164,900 products; US-large unique judged products 1,215,851<span class="srcline">Independent recomputation with pandas from examples.parquet downloaded 2026-08-22</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. I re-downloaded examples.parquet and reproduced every one of these numbers exactly (E 261527, S 211191, I 101447, C 27189; 482105; 8956/181701/164900; 1215851).</td></tr><tr><td class="claim">Direct ESCI-to-McAuley join is empirically poor: meta_Appliances has 94,327 parent_asins, matching only 1,767 ESCI-US-large product_ids (771 in US-small)<span class="srcline">Independent recomputation from meta_Appliances.jsonl.gz x examples.parquet, both downloaded 2026-08-22</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. I re-downloaded meta_Appliances.jsonl.gz and recomputed: 94,327 records / 94,327 unique parent_asins; set intersection with ESCI US product_ids = 1,767 (large) and 771 (small) — exact matches. The conclusion that the direct join is mechanically trivial but low-yield (parent vs child ASIN) is supported.</td></tr><tr><td class="claim">ESCI-S: 91.5% coverage (1.66M of ~1.81M ASINs), Apache-2.0, full dump 3.4 GB zstd at esci-s.s3.amazonaws.com/esci.json.zst, 10 MB / 4,400-product sample<span class="srcline">https://github.com/shuttie/esci-s; HTTP HEAD on https://esci-s.s3.amazonaws.com/esci.json.zst 2026-08-22</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. README states &#x27;1661908 ASINs&#x27; of &#x27;1814925&#x27; = 91.5%, Apache-2.0, &#x27;1.66M products, 3.4G Zstd compressed&#x27;, sample &#x27;4400 products, 10M compressed&#x27;. S3 HEAD confirms the dump exists at 3,620,467,456 B (= 3.37 GiB, i.e. the README&#x27;s &#x27;3.4G&#x27; is GiB; in decimal GB it is 3.62 GB).</td></tr><tr><td class="claim">WANDS: 42,994 products, 480 queries, 233,448 graded judgments (Exact/Partial/Irrelevant), MIT license, product.csv ~86 MB / label.csv ~5.5 MB / query.csv ~20 KB<span class="srcline">https://github.com/wayfair/WANDS; HTTP HEAD on raw.githubusercontent.com/wayfair/WANDS/main/dataset/ 2026-08-22</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. README states &#x27;42,994 candidate products&#x27;, &#x27;480 queries&#x27;, &#x27;233,448 (query,product) relevance judgements&#x27;, labels &#x27;Exact/Partial/Irrelevant&#x27;, MIT license. HEAD confirms product.csv 90,621,131 B, label.csv 5,736,234 B, query.csv 19,942 B — byte-exact vs the claims.</td></tr><tr><td class="claim">Kaggle Amazon UK 2023: ODC Attribution License (ODC-By), 651,062,977 B uncompressed, 2.2M products<span class="srcline">https://www.kaggle.com/api/v1/datasets/view/asaniczka/amazon-uk-products-dataset-2023 fetched 2026-08-22</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. Kaggle public API returns licenseNameNullable=&#x27;ODC Attribution License (ODC-By)&#x27;, totalBytesNullable=651062977, title &#x27;Amazon UK Products Dataset 2023 (2.2M Products)&#x27;. (The 131.107 MB zip figure was not separately re-verified but is consistent with the compressed archive of a 621 MiB CSV.)</td></tr><tr><td class="claim">McAuley Amazon Reviews 2023: 571.54M reviews / 48.19M items, no explicit license on the HF card (academic/non-commercial posture), meta_Appliances.jsonl.gz 66,406,659 B, meta_Musical_Instruments.jsonl.gz 155,378,934 B<span class="srcline">https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023; HTTP HEAD on mcauleylab.ucsd.edu 2026-08-22</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">Numbers and &#x27;no explicit license&#x27; all confirmed (HF card states 571.54M reviews / 48.19M items and carries no license field; HEAD returns both file sizes byte-exact). One nuance: the card itself contains no explicit non-commercial restriction — only a citation request — so &#x27;academic/non-commercial&#x27; is the research agen</td></tr><tr><td class="claim">MS MARCO: 8,841,823 passages, non-commercial research purposes only, collection.tar.gz 1,035,009,698 B<span class="srcline">https://microsoft.github.io/msmarco/; HTTP HEAD 2026-08-22</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. Site confirms 8,841,823 passages and terms stating datasets are &#x27;intended for non-commercial research purposes only... made available free of charge without extending any license&#x27;; HEAD on msmarco.z22.web.core.windows.net returns Content-Length 1035009698 — byte-exact.</td></tr><tr><td class="claim">Amazon-C4: 21,223 synthetic queries (ChatGPT-rephrased five-star reviews), ~1.06M-item pool, no license; metarank/esci is pre-joined ESCI+ESCI-S under Apache 2.0<span class="srcline">https://huggingface.co/datasets/McAuley-Lab/Amazon-C4; https://huggingface.co/datasets/metarank/esci</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. Amazon-C4 card states 21,223 queries, generation via &#x27;ChatGPT rephrases user reviews as complex contexts with a first-person tone&#x27; from five-star reviews, item pool 1,058,417 (~1.06M), and no license. metarank/esci card confirms &#x27;A combination of Amazon ESCI and ESCI-S datasets&#x27;, Apache 2.0, one ranking ev</td></tr></tbody></table></div>
+
+<footer class="method">
+  Method: one research agent (web, primary sources, local parquet computation) and one
+  adversarial verifier re-checking every decision-changing number — file sizes byte-exact
+  via HTTP HEAD, counts recomputed from downloaded data. 12 claim clusters checked,
+  0 wrong, 0 unverifiable. This page is the record; it lives in the repo at <code>docs/research/datasets.html</code>. Companion page: “Search Tooling Landscape”.
+</footer>
+</main>

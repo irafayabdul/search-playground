@@ -1,0 +1,229 @@
+<title>Search Tooling Landscape</title>
+<style>
+:root {
+  --paper:#FAFBFC; --surface:#FFFFFF; --ink:#1B2430; --muted:#5C6675;
+  --line:#DBE0E7; --accent:#0E7A6F; --accent-ink:#0A5A52; --accent-soft:#EDF5F3;
+  --warn:#B4540A; --warn-soft:#F9EFE6; --chip-skip:#EEF1F4;
+  --display:"Seravek","Gill Sans","Gill Sans MT","Trebuchet MS","Segoe UI",sans-serif;
+  --body:"Charter","Bitstream Charter","Iowan Old Style","Sitka Text",Cambria,Georgia,serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:#10151D; --surface:#161D27; --ink:#E6EBF1; --muted:#96A1B0;
+    --line:#2A3340; --accent:#45BFB0; --accent-ink:#7DD6CA; --accent-soft:#152520;
+    --warn:#DF8B4E; --warn-soft:#2A1F15; --chip-skip:#1E2631;
+  }
+}
+:root[data-theme="dark"] {
+  --paper:#10151D; --surface:#161D27; --ink:#E6EBF1; --muted:#96A1B0;
+  --line:#2A3340; --accent:#45BFB0; --accent-ink:#7DD6CA; --accent-soft:#152520;
+  --warn:#DF8B4E; --warn-soft:#2A1F15; --chip-skip:#1E2631;
+}
+* { box-sizing:border-box; }
+body {
+  background:var(--paper); color:var(--ink); font-family:var(--body);
+  font-size:16px; line-height:1.55; margin:0; padding:0 20px 72px;
+}
+main { max-width:900px; margin:0 auto; }
+header.page { padding:48px 0 8px; border-bottom:2px solid var(--ink); margin-bottom:28px; }
+.eyebrow {
+  font-family:var(--display); font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted); display:flex; flex-wrap:wrap;
+  gap:6px 14px; align-items:center; margin-bottom:14px;
+}
+.eyebrow .check {
+  color:var(--accent-ink); background:var(--accent-soft);
+  padding:2px 9px; border-radius:2px; letter-spacing:.1em;
+}
+h1 {
+  font-family:var(--display); font-weight:600; font-size:clamp(26px,4.5vw,34px);
+  line-height:1.12; margin:0 0 10px; text-wrap:balance; letter-spacing:-.01em;
+}
+.standfirst { font-size:17px; color:var(--muted); max-width:64ch; margin:0 0 26px; }
+h2 {
+  font-family:var(--display); font-weight:600; font-size:20px; margin:44px 0 12px;
+  letter-spacing:-.005em;
+}
+h3 { font-family:var(--display); font-weight:600; font-size:16px; margin:26px 0 6px; }
+p { max-width:70ch; margin:0 0 14px; }
+a { color:var(--accent-ink); text-decoration-thickness:1px; text-underline-offset:2px; }
+.verdict {
+  background:var(--accent-soft); border-left:3px solid var(--accent);
+  padding:20px 24px; margin:0 0 8px;
+}
+.verdict h2 { margin:0 0 10px; font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-ink); }
+.verdict p { margin:0 0 10px; }
+.verdict p:last-child { margin:0; }
+.callout {
+  background:var(--warn-soft); border-left:3px solid var(--warn);
+  padding:18px 22px; margin:18px 0;
+}
+.callout .tag { font-family:var(--display); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--warn); display:block; margin-bottom:8px; }
+.callout p { margin:0 0 10px; } .callout p:last-child { margin:0; }
+.tablewrap { overflow-x:auto; margin:14px 0 6px; border:1px solid var(--line); background:var(--surface); }
+table { border-collapse:collapse; width:100%; font-size:14px; }
+th {
+  font-family:var(--display); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--muted); text-align:left; padding:10px 14px; border-bottom:2px solid var(--line);
+  white-space:nowrap;
+}
+td { padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+tr:last-child td { border-bottom:none; }
+td.num, .num { font-family:var(--mono); font-size:12.5px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+td.name { font-family:var(--display); font-weight:600; font-size:13.5px; white-space:nowrap; }
+.chip {
+  font-family:var(--display); display:inline-block; font-size:10.5px; font-weight:600;
+  letter-spacing:.1em; text-transform:uppercase; padding:2px 8px; border-radius:2px; white-space:nowrap;
+}
+.chip.keep, .chip.adopt { background:var(--accent-soft); color:var(--accent-ink); }
+.chip.keep { outline:1px solid var(--accent); }
+.chip.note { background:transparent; color:var(--muted); outline:1px solid var(--line); }
+.chip.skip { background:var(--chip-skip); color:var(--muted); }
+.chip.avoid { background:var(--warn-soft); color:var(--warn); }
+.mark { font-size:15px; line-height:1; }
+.mark.full { color:var(--accent); } .mark.part { color:var(--muted); } .mark.none { color:var(--warn); }
+.legend { font-family:var(--display); font-size:12px; color:var(--muted); margin:4px 0 0; }
+.card {
+  background:var(--surface); border:1px solid var(--line); padding:20px 24px; margin:16px 0;
+}
+.card header { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:baseline; margin-bottom:8px; }
+.card h3 { margin:0; font-size:17px; }
+.facts { display:grid; grid-template-columns:max-content 1fr; gap:5px 18px; margin:12px 0; font-size:14px; }
+.facts dt { font-family:var(--display); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding-top:2px; }
+.facts dd { margin:0; }
+.fit { border-top:1px solid var(--line); padding-top:10px; font-size:14.5px; }
+.fit strong { font-family:var(--display); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-ink); }
+ol.steps { counter-reset:step; list-style:none; padding:0; max-width:76ch; }
+ol.steps li {
+  counter-increment:step; position:relative; padding:0 0 14px 44px; font-size:14.5px;
+}
+ol.steps li::before {
+  content:counter(step); position:absolute; left:0; top:1px;
+  font-family:var(--mono); font-size:12px; color:var(--accent-ink);
+  background:var(--accent-soft); width:26px; height:26px; border-radius:2px;
+  display:flex; align-items:center; justify-content:center;
+}
+code { font-family:var(--mono); font-size:.85em; background:var(--chip-skip); padding:1px 5px; border-radius:2px; }
+footer.method {
+  margin-top:52px; padding-top:16px; border-top:1px solid var(--line);
+  font-family:var(--display); font-size:12.5px; color:var(--muted); max-width:76ch;
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior:smooth; } }
+
+details.src { border:1px solid var(--line); background:var(--surface); margin:8px 0; }
+details.src > summary {
+  cursor:pointer; padding:9px 14px; font-family:var(--display); font-size:12.5px;
+  font-weight:600; color:var(--accent-ink); list-style:none;
+}
+details.src > summary::-webkit-details-marker { display:none; }
+details.src > summary::before { content:"\25B8  "; color:var(--muted); }
+details.src[open] > summary::before { content:"\25BE  "; }
+details.src > summary:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+details.src .inner { padding:2px 14px 12px; }
+ul.cites { margin:0; padding-left:18px; font-size:13px; line-height:1.5; }
+ul.cites li { margin-bottom:5px; overflow-wrap:anywhere; }
+.vtable td.claim { font-size:13px; }
+.appendix-note { font-size:14px; color:var(--muted); max-width:70ch; }
+.srcline { font-family:var(--mono); font-size:11px; color:var(--muted); display:block; margin-top:3px; overflow-wrap:anywhere; }
+</style>
+<main>
+<header class="page">
+  <div class="eyebrow">
+    <span>Search Project · Research Record</span><span>22 Aug 2026</span>
+    <span class="check">14 claims verified on primary sources · 0 wrong</span>
+  </div>
+  <h1>Search Tooling Landscape</h1>
+  <p class="standfirst">Thirty-six free and open-source tools across six layers of the
+  search stack, licenses read from the actual LICENSE files — mapped against the
+  OpenSearch pipeline we already run.</p>
+</header>
+
+<section class="verdict">
+  <h2>Verdict</h2>
+  <p><strong>Our stack is the textbook 2026 stack in miniature.</strong> The industry-standard
+  pattern for e-commerce search — a Lucene-based engine running BM25 + dense k-NN hybrid,
+  RRF fusion, a cross-encoder reranker, sentence-transformers embeddings — is exactly the
+  shape already built. Nothing about it is off-standard; nothing needs replacing.</p>
+  <p><strong>Add for the evaluation session:</strong> ranx (metrics + significance tests +
+  a reference RRF to check ours against) and Quepid (collect our own judgments against the
+  live index). <strong>Avoid:</strong> NAVER SPLADE (non-commercial license), standalone
+  vector DBs (redundant with OpenSearch k-NN), and framework retrieval layers that hide
+  the mechanics we're teaching.</p>
+</section>
+
+<div class="callout"><span class="tag">Premise check — “Elasticsearch is not open source”</span>
+  <p>Needs a 2024-shaped update: since 8.16 (Aug 2024), Elasticsearch core is triple-licensed
+  — AGPL-3.0-only <em>or</em> SSPL-1.0 <em>or</em> Elastic License 2.0 — and AGPL-3.0 is
+  OSI-approved, so the core formally <em>is</em> open source again (verified in the repo's
+  LICENSE.txt).</p>
+  <p>Two caveats keep OpenSearch the right call anyway: the x-pack tree — including much of
+  the ML/semantic tooling such as ELSER — stays ELv2-only, so “free Elasticsearch” means
+  per-feature license auditing; and AGPL copyleft makes some companies nervous for anything
+  network-served. OpenSearch is uniformly Apache-2.0 under Linux Foundation governance.
+  The accurate line for the session: <em>“open source again, but single-vendor, partly
+  ELv2-gated, and copyleft — OpenSearch remains the clean fully-Apache choice.”</em></p>
+</div>
+
+<h2>The map, layer by layer</h2>
+<h3>1. Full-text / hybrid search engines</h3>
+<div class="tablewrap"><table><thead><tr><th>Tool</th><th>License</th><th>Call</th><th>Verdict for this project</th></tr></thead><tbody><tr><td class="name">OpenSearch</td><td class="num">Apache-2.0</td><td><span class="chip keep">Keep</span></td><td>KEEP as the primary engine — and note we can now move our client-side RRF server-side (2.19 score-ranker processor) and demo the difference, which is a great evaluation-session exercise.</td></tr><tr><td class="name">Apache Solr</td><td class="num">Apache-2.0</td><td><span class="chip skip">Skip</span></td><td>Skip — same Lucene underneath as OpenSearch with a clunkier vector/hybrid story; nothing to learn here we don&#x27;t get from OpenSearch.</td></tr><tr><td class="name">Vespa</td><td class="num">Apache-2.0</td><td><span class="chip note">Mention</span></td><td>Skip for this demo (too heavy to run alongside OpenSearch), but name-drop it in the session as where ranking-heavy e-commerce teams go at scale.</td></tr><tr><td class="name">Typesense</td><td class="num">GPL-3.0-only</td><td><span class="chip skip">Skip</span></td><td>Skip — GPL-3.0 is fine for our shared repo, but it&#x27;s an instant-search product, not an IR teaching platform; less to learn about fusion/reranking internals.</td></tr><tr><td class="name">Meilisearch</td><td class="num">MIT AND BUSL-1.1</td><td><span class="chip skip">Skip</span></td><td>Skip — great DX but a black-box ranker; also note its quiet MIT→(MIT+BUSL) split in 2025 as a licensing cautionary tale for the session.</td></tr><tr><td class="name">Quickwit</td><td class="num">Apache-2.0</td><td><span class="chip skip">Skip</span></td><td>Not relevant — wrong problem domain (logs, not ranking).</td></tr><tr><td class="name">ZincSearch</td><td class="num">Apache-2.0</td><td><span class="chip avoid">Dead</span></td><td>Do not touch — abandoned.</td></tr><tr><td class="name">Elasticsearch</td><td class="num">Triple license for core: AGPL-3.…</td><td><span class="chip skip">No switch</span></td><td>The user&#x27;s premise needs updating (see elasticsearch_license_status), but the conclusion stands: no reason to switch — OpenSearch gives us the same Lucene foundation, fully Apache-2.0, with no per-feature license audi…</td></tr><tr><td class="name">ParadeDB (pg_search)</td><td class="num">AGPL-3.0</td><td><span class="chip note">One slide</span></td><td>Skip for the demo, but worth one slide: &#x27;Postgres as a search engine&#x27; is a real 2026 trend for small e-commerce catalogs.</td></tr></tbody></table></div>
+<h3>2. Vector databases</h3>
+<div class="tablewrap"><table><thead><tr><th>Tool</th><th>License</th><th>Call</th><th>Verdict for this project</th></tr></thead><tbody><tr><td class="name">Qdrant</td><td class="num">Apache-2.0</td><td><span class="chip skip">Skip</span></td><td>Best-in-class if we ever needed a standalone vector DB — but we don&#x27;t: OpenSearch k-NN already covers it. Redundant here.</td></tr><tr><td class="name">Milvus</td><td class="num">Apache-2.0</td><td><span class="chip skip">Skip</span></td><td>Explicitly skip — its sweet spot starts about three orders of magnitude above our corpus budget.</td></tr><tr><td class="name">Weaviate</td><td class="num">BSD-3-Clause</td><td><span class="chip skip">Skip</span></td><td>Good product, still redundant with OpenSearch for us.</td></tr><tr><td class="name">Chroma</td><td class="num">Apache-2.0</td><td><span class="chip skip">Skip</span></td><td>Skip — it&#x27;s the &#x27;notebook vector store&#x27;, a step backwards from what we&#x27;ve built.</td></tr><tr><td class="name">LanceDB</td><td class="num">Apache-2.0</td><td><span class="chip note">Mention</span></td><td>The most interesting &#x27;what if we needed zero infrastructure&#x27; alternative — worth a mention, not an adoption.</td></tr><tr><td class="name">pgvector</td><td class="num">PostgreSQL License</td><td><span class="chip note">Mention</span></td><td>Not needed here, but the correct answer to &#x27;what do most product teams actually use for vectors in 2026&#x27; — say that in the session.</td></tr></tbody></table></div>
+<h3>3. ANN / embedding libraries</h3>
+<div class="tablewrap"><table><thead><tr><th>Tool</th><th>License</th><th>Call</th><th>Verdict for this project</th></tr></thead><tbody><tr><td class="name">FAISS</td><td class="num">MIT</td><td><span class="chip note">Notebook</span></td><td>Worth 30 minutes in a notebook to show IVF/HNSW/PQ trade-offs conceptually — the theory backbone for the k-NN we already run — but not a runtime component.</td></tr><tr><td class="name">hnswlib</td><td class="num">Apache-2.0</td><td><span class="chip skip">Cite</span></td><td>Nothing to add — OpenSearch&#x27;s Lucene HNSW is the same algorithm; cite it as the origin.</td></tr><tr><td class="name">Annoy</td><td class="num">Apache-2.0</td><td><span class="chip avoid">Obsolete</span></td><td>Do not adopt — historically important, technically obsolete (no incremental adds, worse recall/speed than HNSW).</td></tr><tr><td class="name">ScaNN</td><td class="num">Apache-2.0</td><td><span class="chip avoid">No arm64</span></td><td>Skip — excellent library, wrong platform for us.</td></tr><tr><td class="name">usearch</td><td class="num">Apache-2.0</td><td><span class="chip skip">Skip</span></td><td>Neat if we ever want an in-notebook ANN comparison on this Mac; otherwise not needed.</td></tr></tbody></table></div>
+<h3>4. Model layer</h3>
+<div class="tablewrap"><table><thead><tr><th>Tool</th><th>License</th><th>Call</th><th>Verdict for this project</th></tr></thead><tbody><tr><td class="name">sentence-transformers</td><td class="num">Apache-2.0</td><td><span class="chip keep">Keep</span></td><td>KEEP — already the industry-standard choice; also our path into the loss-functions session (it ships MultipleNegativesRankingLoss etc. with training examples).</td></tr><tr><td class="name">ColBERT / PLAID</td><td class="num">MIT</td><td><span class="chip note">Mention</span></td><td>Mention as &#x27;the third architecture&#x27; in the session; too CPU-heavy to add to the demo pipeline.</td></tr><tr><td class="name">SPLADE (naver/splade)</td><td class="num">CC-BY-NC-SA-4.0</td><td><span class="chip avoid">License</span></td><td>DO NOT adopt the NAVER code/weights — CC-BY-NC-SA is the wrong license for a shared repo with any commercial ambiguity. The drop-in replacement: opensearch-project neural-sparse encoders on Hugging Face (Apache-2.0, S…</td></tr><tr><td class="name">ONNX Runtime</td><td class="num">MIT</td><td><span class="chip adopt">Add if slow</span></td><td>ADD if embedding time becomes the bottleneck: exporting all-MiniLM-L6-v2 to quantized ONNX would cut our ~1 hour / 100k docs meaningfully, on CPU, for free.</td></tr></tbody></table></div>
+<h3>5. Orchestration / RAG frameworks</h3>
+<div class="tablewrap"><table><thead><tr><th>Tool</th><th>License</th><th>Call</th><th>Verdict for this project</th></tr></thead><tbody><tr><td class="name">Haystack</td><td class="num">Apache-2.0</td><td><span class="chip note">Reference</span></td><td>The only framework here genuinely used by industry search teams — but our ~200-line explicit pipeline teaches more than hiding it behind Haystack components. Reference it; don&#x27;t rewrite onto it.</td></tr><tr><td class="name">txtai</td><td class="num">Apache-2.0</td><td><span class="chip skip">Skip</span></td><td>Skip — overlaps entirely with what we hand-built.</td></tr><tr><td class="name">LlamaIndex</td><td class="num">MIT</td><td><span class="chip skip">RAG later</span></td><td>Candidate for the future LLM/RAG session only — as a thin layer over our existing retriever, never as the retriever.</td></tr><tr><td class="name">LangChain</td><td class="num">MIT</td><td><span class="chip skip">RAG later</span></td><td>Skip for search; at most optional glue in the RAG session. Its retrieval abstractions would obscure exactly what we&#x27;re trying to teach.</td></tr></tbody></table></div>
+<h3>6. Evaluation tooling</h3>
+<div class="tablewrap"><table><thead><tr><th>Tool</th><th>License</th><th>Call</th><th>Verdict for this project</th></tr></thead><tbody><tr><td class="name">ranx</td><td class="num">MIT</td><td><span class="chip adopt">Adopt</span></td><td>ADOPT — the single best addition for the evaluation session: Qrels/Run objects, NDCG@k/MAP/MRR/Recall, paired significance tests, fusion comparison, and LaTeX/report export in a few lines.</td></tr><tr><td class="name">pytrec_eval</td><td class="num">MIT</td><td><span class="chip adopt">Adopt</span></td><td>ADOPT (comes along anyway) — show it once so the team knows what ranx/BEIR sit on top of.</td></tr><tr><td class="name">ir-measures</td><td class="num">Apache-2.0</td><td><span class="chip note">Mention</span></td><td>Nice-to-have alternative front-end; ranx covers our needs — mention, don&#x27;t require.</td></tr><tr><td class="name">BEIR</td><td class="num">Apache-2.0</td><td><span class="chip adopt">Use</span></td><td>Use as a source of ready-made corpus+queries+qrels sized for a laptop (e.g. its smaller datasets) to make eval concrete before we have product-domain judgments.</td></tr><tr><td class="name">ir_datasets</td><td class="num">Apache-2.0</td><td><span class="chip adopt">Adopt</span></td><td>ADOPT as the clean way to pull queries+qrels into the eval session without hand-parsing TREC formats.</td></tr><tr><td class="name">trec_eval (NIST)</td><td class="num">NIST public-service license</td><td><span class="chip note">Reference</span></td><td>Reference only — use via pytrec_eval/ranx rather than the C binary.</td></tr><tr><td class="name">Quepid</td><td class="num">Apache-2.0</td><td><span class="chip adopt">Adopt</span></td><td>ADOPT for the label-collection story: point it at our OpenSearch index, have the three of us judge 20-30 queries, and the eval session gets real NDCG on our own data. This is the standard human-labeling workflow; no b…</td></tr><tr><td class="name">RRE (Rated Ranking Evaluator)</td><td class="num">Apache-2.0</td><td><span class="chip skip">Skip</span></td><td>Skip — Quepid + ranx covers the same ground with more life in it.</td></tr></tbody></table></div>
+
+<h2>What to add, in priority order</h2>
+<ol class="steps">
+  <li><strong>ranx</strong> (MIT) — Qrels/Run objects, NDCG@k / MAP / MRR / recall, paired
+      significance tests between pipeline variants (BM25-only vs k-NN-only vs RRF vs reranked
+      is a ready-made lesson arc), and <code>ranx.fuse</code> to sanity-check our hand-rolled RRF.</li>
+  <li><strong>Quepid</strong> (Apache-2.0) — docker-compose, points at the existing OpenSearch;
+      the three of us judge 20–30 queries and the metrics session runs on our own labels.</li>
+  <li><strong>ir_datasets + BEIR's small sets</strong> — instant corpus/queries/qrels while our
+      own judgments are thin.</li>
+  <li><strong>Server-side fusion</strong> — OpenSearch 2.19 already ships hybrid query +
+      normalization / score-ranker (RRF) processors; compare against our client-side RRF as a
+      live eval exercise.</li>
+  <li><strong>ONNX export</strong> (optional) — quantized all-MiniLM-L6-v2 via optimum/onnxruntime
+      for roughly 2–3× CPU embedding speed.</li>
+  <li><strong>OpenSearch neural-sparse</strong> (stretch) — the legally clean SPLADE-family
+      retriever (Apache-2.0 models on HF), wired into the native <code>neural_sparse</code> query.</li>
+</ol>
+
+<h2>Explicitly not adopting</h2>
+<div class="tablewrap"><table>
+  <thead><tr><th>What</th><th>Why not</th></tr></thead>
+  <tbody>
+  <tr><td class="name">NAVER SPLADE</td><td>CC-BY-NC-SA-4.0 on code <em>and</em> weights — non-commercial + ShareAlike is wrong for a shared repo; use OpenSearch's Apache-2.0 neural-sparse models instead</td></tr>
+  <tr><td class="name">Standalone vector DBs</td><td>Qdrant/Weaviate/Chroma/Milvus/LanceDB all redundant with OpenSearch k-NN; a second store fragments the demo; Milvus is too heavy for 16 GB</td></tr>
+  <tr><td class="name">LangChain / LlamaIndex as retrieval</td><td>their abstractions hide exactly the fusion/rerank mechanics being taught; revisit as thin glue in the RAG session only</td></tr>
+  <tr><td class="name">Switching to Elasticsearch</td><td>open source again, but single-vendor, partly ELv2-gated, copyleft — and buys nothing over the running OpenSearch cluster</td></tr>
+  <tr><td class="name">ZincSearch · Annoy · ScaNN · RRE</td><td>archived / obsoleted by HNSW / no macOS arm64 wheels / dormant, superseded by Quepid + ranx</td></tr>
+  </tbody>
+</table></div>
+
+<h2>Sources</h2>
+<p class="appendix-note">License claims were re-read from the actual LICENSE file or official announcement rather than secondary summaries.</p>
+<details class="src"><summary>1. Full-text / hybrid search engines — 14 sources</summary><div class="inner"><ul class="cites"><li>OpenSearch — <a href="https://github.com/opensearch-project/OpenSearch/blob/main/LICENSE.txt">https://github.com/opensearch-project/OpenSearch/blob/main/LICENSE.txt</a></li><li>OpenSearch — <a href="https://www.linuxfoundation.org/press/linux-foundation-announces-opensearch-software-foundation-to-foster-open-collaboration-in-search-and-analytics">https://www.linuxfoundation.org/press/linux-foundation-announces-opensearch-software-foundation-to-foster-open-collaboration-in-search-and-analytics</a></li><li>OpenSearch — <a href="https://docs.opensearch.org/latest/query-dsl/compound/hybrid/">https://docs.opensearch.org/latest/query-dsl/compound/hybrid/</a></li><li>Apache Solr — <a href="https://github.com/apache/solr/blob/main/LICENSE.txt">https://github.com/apache/solr/blob/main/LICENSE.txt</a></li><li>Vespa — <a href="https://github.com/vespa-engine/vespa/blob/master/LICENSE">https://github.com/vespa-engine/vespa/blob/master/LICENSE</a></li><li>Typesense — <a href="https://github.com/typesense/typesense/blob/main/LICENSE.txt">https://github.com/typesense/typesense/blob/main/LICENSE.txt</a></li><li>Meilisearch — <a href="https://github.com/meilisearch/meilisearch/blob/main/LICENSE">https://github.com/meilisearch/meilisearch/blob/main/LICENSE</a></li><li>Quickwit — <a href="https://github.com/quickwit-oss/quickwit/blob/main/LICENSE">https://github.com/quickwit-oss/quickwit/blob/main/LICENSE</a></li><li>Quickwit — <a href="https://quickwit.io/blog/quickwit-joins-datadog">https://quickwit.io/blog/quickwit-joins-datadog</a></li><li>ZincSearch — <a href="https://github.com/zincsearch/zincsearch">https://github.com/zincsearch/zincsearch</a></li><li>Elasticsearch — <a href="https://github.com/elastic/elasticsearch/blob/main/LICENSE.txt">https://github.com/elastic/elasticsearch/blob/main/LICENSE.txt</a></li><li>Elasticsearch — <a href="https://www.elastic.co/blog/elasticsearch-is-open-source-again">https://www.elastic.co/blog/elasticsearch-is-open-source-again</a></li><li>Elasticsearch — <a href="https://opensource.org/license/agpl-v3">https://opensource.org/license/agpl-v3</a></li><li>ParadeDB (pg_search) — <a href="https://github.com/paradedb/paradedb/blob/main/LICENSE">https://github.com/paradedb/paradedb/blob/main/LICENSE</a></li></ul></div></details>
+<details class="src"><summary>2. Vector databases — 6 sources</summary><div class="inner"><ul class="cites"><li>Qdrant — <a href="https://github.com/qdrant/qdrant/blob/master/LICENSE">https://github.com/qdrant/qdrant/blob/master/LICENSE</a></li><li>Milvus — <a href="https://github.com/milvus-io/milvus/blob/master/LICENSE">https://github.com/milvus-io/milvus/blob/master/LICENSE</a></li><li>Weaviate — <a href="https://github.com/weaviate/weaviate/blob/main/LICENSE">https://github.com/weaviate/weaviate/blob/main/LICENSE</a></li><li>Chroma — <a href="https://github.com/chroma-core/chroma/blob/main/LICENSE">https://github.com/chroma-core/chroma/blob/main/LICENSE</a></li><li>LanceDB — <a href="https://github.com/lancedb/lancedb/blob/main/LICENSE">https://github.com/lancedb/lancedb/blob/main/LICENSE</a></li><li>pgvector — <a href="https://github.com/pgvector/pgvector/blob/master/LICENSE">https://github.com/pgvector/pgvector/blob/master/LICENSE</a></li></ul></div></details>
+<details class="src"><summary>3. ANN / embedding libraries — 6 sources</summary><div class="inner"><ul class="cites"><li>FAISS — <a href="https://github.com/facebookresearch/faiss/blob/main/LICENSE">https://github.com/facebookresearch/faiss/blob/main/LICENSE</a></li><li>hnswlib — <a href="https://github.com/nmslib/hnswlib/blob/master/LICENSE">https://github.com/nmslib/hnswlib/blob/master/LICENSE</a></li><li>Annoy — <a href="https://github.com/spotify/annoy/blob/main/LICENSE">https://github.com/spotify/annoy/blob/main/LICENSE</a></li><li>ScaNN — <a href="https://github.com/google-research/google-research/blob/master/LICENSE">https://github.com/google-research/google-research/blob/master/LICENSE</a></li><li>ScaNN — <a href="https://github.com/google-research/google-research/tree/master/scann">https://github.com/google-research/google-research/tree/master/scann</a></li><li>usearch — <a href="https://github.com/unum-cloud/usearch/blob/main/LICENSE">https://github.com/unum-cloud/usearch/blob/main/LICENSE</a></li></ul></div></details>
+<details class="src"><summary>4. Model layer — 5 sources</summary><div class="inner"><ul class="cites"><li>sentence-transformers — <a href="https://github.com/UKPLab/sentence-transformers/blob/master/LICENSE">https://github.com/UKPLab/sentence-transformers/blob/master/LICENSE</a></li><li>ColBERT / PLAID — <a href="https://github.com/stanford-futuredata/ColBERT/blob/main/LICENSE">https://github.com/stanford-futuredata/ColBERT/blob/main/LICENSE</a></li><li>SPLADE (naver/splade) — <a href="https://github.com/naver/splade/blob/main/LICENSE">https://github.com/naver/splade/blob/main/LICENSE</a></li><li>SPLADE (naver/splade) — <a href="https://huggingface.co/opensearch-project/opensearch-neural-sparse-encoding-doc-v2-distill">https://huggingface.co/opensearch-project/opensearch-neural-sparse-encoding-doc-v2-distill</a></li><li>ONNX Runtime — <a href="https://github.com/microsoft/onnxruntime/blob/main/LICENSE">https://github.com/microsoft/onnxruntime/blob/main/LICENSE</a></li></ul></div></details>
+<details class="src"><summary>5. Orchestration / RAG frameworks — 4 sources</summary><div class="inner"><ul class="cites"><li>Haystack — <a href="https://github.com/deepset-ai/haystack/blob/main/LICENSE">https://github.com/deepset-ai/haystack/blob/main/LICENSE</a></li><li>txtai — <a href="https://github.com/neuml/txtai/blob/master/LICENSE">https://github.com/neuml/txtai/blob/master/LICENSE</a></li><li>LlamaIndex — <a href="https://github.com/run-llama/llama_index/blob/main/LICENSE">https://github.com/run-llama/llama_index/blob/main/LICENSE</a></li><li>LangChain — <a href="https://github.com/langchain-ai/langchain/blob/master/LICENSE">https://github.com/langchain-ai/langchain/blob/master/LICENSE</a></li></ul></div></details>
+<details class="src"><summary>6. Evaluation tooling — 8 sources</summary><div class="inner"><ul class="cites"><li>ranx — <a href="https://github.com/AmenRa/ranx/blob/master/LICENSE">https://github.com/AmenRa/ranx/blob/master/LICENSE</a></li><li>pytrec_eval — <a href="https://github.com/cvangysel/pytrec_eval/blob/master/LICENSE">https://github.com/cvangysel/pytrec_eval/blob/master/LICENSE</a></li><li>ir-measures — <a href="https://github.com/terrierteam/ir_measures/blob/main/LICENSE.txt">https://github.com/terrierteam/ir_measures/blob/main/LICENSE.txt</a></li><li>BEIR — <a href="https://github.com/beir-cellar/beir/blob/main/LICENSE">https://github.com/beir-cellar/beir/blob/main/LICENSE</a></li><li>ir_datasets — <a href="https://github.com/allenai/ir_datasets/blob/master/LICENSE">https://github.com/allenai/ir_datasets/blob/master/LICENSE</a></li><li>trec_eval (NIST) — <a href="https://github.com/usnistgov/trec_eval/blob/main/LICENSE.md">https://github.com/usnistgov/trec_eval/blob/main/LICENSE.md</a></li><li>Quepid — <a href="https://github.com/o19s/quepid/blob/main/LICENSE">https://github.com/o19s/quepid/blob/main/LICENSE</a></li><li>RRE (Rated Ranking Evaluator) — <a href="https://github.com/SeaseLtd/rated-ranking-evaluator/blob/master/LICENSE">https://github.com/SeaseLtd/rated-ranking-evaluator/blob/master/LICENSE</a></li></ul></div></details>
+<h2>Verification record</h2><p class="appendix-note">High. All 14 load-bearing claims re-verified against primary sources (actual LICENSE files via raw.githubusercontent.com, official Elastic/OpenSearch/Linux Foundation/Quickwit announcements, OpenSearch docs, Hugging Face model card) came back confirmed — including the three focus areas: (1) the Elasticsearch 2024 status (triple license AGPL/SSPL/ELv2 with x-pack ELv2-only, AGPL added Aug 29 2024 landing in 8.16) is stated accurately and with correct nuance; (2) every spot-checked license claim matches the actual license file, including the tricky ones (Meilisearch &#x27;MIT AND BUSL-1.1&#x27;, Quickwit&#x27;s post-Datadog Apache-2.0, SPLADE&#x27;s CC-BY-NC-SA-4.0, FAISS MIT, Weaviate BSD-3, Typesense GPL-3); (3) the OpenSearch hybrid-search version claims (normalization processor GA in 2.10, server-side RRF score-ranker processor in 2.19) are exactly right, so the &#x27;move RRF server-side&#x27; recommendation is well-founded. Only two immaterial nuances found: the Elastic blog itself doesn&#x27;t name 8.16 (verified via the v8.16.0-labeled PR), and one SPLADE file is Apache-2.0. Not re-verified: GitHub star counts (spot-checked ZincSearch at ~17.9k, which matched), adoption anecdotes (Uber/Perplexity/eBay etc.), and the Meilisearch BUSL split&#x27;s &#x27;2025&#x27; date — treat those as plausible but unaudited; none of them changes a decision.</p><div class="tablewrap"><table class="vtable"><thead><tr><th>Claim checked</th><th>Verdict</th><th>Note</th></tr></thead><tbody><tr><td class="claim">Elasticsearch core: triple license AGPL-3.0-only OR SSPL-1.0 OR ELv2; x-pack folder is ELv2-only<span class="srcline">https://github.com/elastic/elasticsearch/blob/main/LICENSE.txt</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. The repo LICENSE.txt states the default throughout is the triple license (AGPL-3.0-only, SSPL v1, ELv2) and that &#x27;Code that is licensed solely under the Elastic License 2.0 is found only in the x-pack folder.&#x27;</td></tr><tr><td class="claim">AGPL option announced 29 Aug 2024; AGPL is OSI-approved; shipped in Elasticsearch 8.16<span class="srcline">https://www.elastic.co/blog/elasticsearch-is-open-source-again ; https://github.com/elastic/elasticsearch/pull/114487</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed, one nuance: the 29 Aug 2024 blog post itself does not name a version (it says &#x27;in the coming weeks&#x27;); the 8.16 attribution is verified separately via elastic/elasticsearch PR #114487 (merged Oct 10, 2024 with the v8.16.0 label) and contemporaneous reporting that the change took effect before 8.16 GA. The b</td></tr><tr><td class="claim">OpenSearch is Apache-2.0<span class="srcline">https://github.com/opensearch-project/OpenSearch/blob/main/LICENSE.txt</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. LICENSE.txt is Apache License, Version 2.0.</td></tr><tr><td class="claim">OpenSearch Software Foundation under the Linux Foundation since Sept 2024, transferred by AWS<span class="srcline">https://www.linuxfoundation.org/press/linux-foundation-announces-opensearch-software-foundation-to-foster-open-collaboration-in-search-and-analytics</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. Linux Foundation press release dated September 16, 2024; AWS transitioned OpenSearch to the foundation; premier members AWS, SAP, Uber.</td></tr><tr><td class="claim">OpenSearch hybrid query with normalization processor GA since 2.10<span class="srcline">https://opensearch.org/blog/hybrid-search/</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. OpenSearch&#x27;s own blog: hybrid query and the normalization processor were promoted to GA in 2.10 (released Sept 2023).</td></tr><tr><td class="claim">Server-side RRF via score-ranker processor added in OpenSearch 2.19<span class="srcline">https://docs.opensearch.org/latest/search-plugins/search-pipelines/score-ranker-processor/ ; https://opensearch.org/blog/introducing-reciprocal-rank-fusion-hybrid-search/</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. Docs and the OpenSearch blog &#x27;Introducing reciprocal rank fusion for hybrid search&#x27; both state the score-ranker-processor implementing RRF was introduced in 2.19. The recommendation to move client-side RRF server-side on a 2.19 cluster is sound.</td></tr><tr><td class="claim">NAVER SPLADE code is CC-BY-NC-SA-4.0, non-commercial + ShareAlike<span class="srcline">https://github.com/naver/splade/blob/main/LICENSE</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">Confirmed with one minor nuance: the repo LICENSE is CC BY-NC-SA 4.0 (commercial use prohibited), but one file (splade/beir_eval.py) is separately Apache-2.0. The do-not-adopt verdict for a shared repo stands.</td></tr><tr><td class="claim">opensearch-neural-sparse-encoding-doc-v2-distill is Apache-2.0 and a SPLADE-family model usable via OpenSearch neural sparse<span class="srcline">https://huggingface.co/opensearch-project/opensearch-neural-sparse-encoding-doc-v2-distill</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. HF model card: Apache v2.0 license, published by OpenSearch contributors, learned sparse encoder (30522-dim sparse vectors) for the OpenSearch neural sparse feature over a Lucene inverted index.</td></tr><tr><td class="claim">Meilisearch license is &#x27;MIT AND BUSL-1.1&#x27; — core MIT, Enterprise Edition files under BUSL 1.1<span class="srcline">https://github.com/meilisearch/meilisearch/blob/main/LICENSE</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed on the current state: the LICENSE file in the main repo literally carries SPDX &#x27;MIT AND BUSL-1.1&#x27; and says Enterprise Edition parts are Business Source License 1.1 while the rest is MIT. The &#x27;2025&#x27; timing of the split was not independently dated from a primary source, but the present-day license characteriz</td></tr><tr><td class="claim">Quickwit is Apache-2.0, relicensed from AGPL after the Datadog acquisition (Jan 2025)<span class="srcline">https://github.com/quickwit-oss/quickwit/blob/main/LICENSE ; https://quickwit.io/blog/quickwit-joins-datadog</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. Current LICENSE is Apache 2.0; the Quickwit blog post (published Jan 9, 2025) announces joining Datadog and the relicense of Quickwit (and tantivy) to Apache License 2.0. Note the post announces the deal without stating a formal closing date — &#x27;Jan 2025&#x27; refers to the announcement.</td></tr><tr><td class="claim">Typesense is GPL-3.0<span class="srcline">https://github.com/typesense/typesense/blob/main/LICENSE.txt</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. LICENSE.txt is GNU GPL Version 3 (29 June 2007).</td></tr><tr><td class="claim">ZincSearch repository is archived (read-only); project dead<span class="srcline">https://github.com/zincsearch/zincsearch</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">Confirmed, with a freshness note: GitHub shows &#x27;This repository was archived by the owner on Aug 18, 2026&#x27; — i.e., the archiving is only days old, so the research is not merely current but unusually up to date. Star count (~17.9k) also matches.</td></tr><tr><td class="claim">Weaviate is BSD-3-Clause<span class="srcline">https://github.com/weaviate/weaviate/blob/main/LICENSE</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. LICENSE is BSD 3-Clause (contains the distinguishing no-endorsement third clause).</td></tr><tr><td class="claim">FAISS is MIT-licensed<span class="srcline">https://github.com/facebookresearch/faiss/blob/main/LICENSE</span></td><td><span class="chip keep">confirmed</span></td><td class="claim">None needed. LICENSE is the MIT License. (Worth noting because Meta projects are often assumed BSD — the research got this right.)</td></tr></tbody></table></div>
+
+<footer class="method">
+  Method: one research agent and one adversarial license-verifier; every license claim
+  re-read from the actual LICENSE file or official announcement (Elastic, OpenSearch,
+  Linux Foundation, Hugging Face model cards). 14 claims checked, 0 wrong.
+  This page is the record; it lives in the repo at <code>docs/research/tools.html</code>.
+  Companion page: “Search Dataset Verdict”.
+</footer>
+</main>
