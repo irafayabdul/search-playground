@@ -117,6 +117,15 @@ scripts/rebuild.sh amazon     # ... with the 94k Appliances corpus
 
 ---
 
+## System design & roadmap
+
+`docs/system-design.html` is the blueprint: the full architecture with sequence
+diagrams and the complete data graph, every store's contract, the measured
+evaluation, how training data gets prepared (both the benchmark path and the
+production methodology), and the phased roadmap — what is built, what is next
+(training the retriever on ESCI), and where this converges with the GraphRAG
+project.
+
 ## Understanding the code
 
 `docs/code-walkthrough.html` walks every module in the order data moves through it —

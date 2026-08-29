@@ -1,0 +1,551 @@
+<title>The Search Blueprint</title>
+<style>
+:root{
+  --ground:#f5f7fa; --surface:#ffffff; --sunk:#eef1f6;
+  --ink:#0e1621; --body:#26313f; --muted:#59677a; --faint:#8593a6;
+  --line:#dde3ec; --line-strong:#c3cddb;
+  --accent:#1f6feb; --accent-soft:#e7effd;
+  --bounded:#15803d; --bounded-bg:#e6f4ea;
+  --strained:#b45309; --strained-bg:#fdf2e0;
+  --broken:#b91c1c; --broken-bg:#fdeaea;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:Georgia,"Iowan Old Style","Palatino Linotype",Palatino,serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0a0e15; --surface:#111825; --sunk:#0d131d;
+    --ink:#e4ebf4; --body:#c3cedd; --muted:#8695a9; --faint:#66748a;
+    --line:#1d2635; --line-strong:#2c3849;
+    --accent:#6aa5ff; --accent-soft:#12233d;
+    --bounded:#4ade80; --bounded-bg:#0f2418;
+    --strained:#fbbf24; --strained-bg:#2a1f08;
+    --broken:#f87171; --broken-bg:#2b1212;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0a0e15; --surface:#111825; --sunk:#0d131d;
+  --ink:#e4ebf4; --body:#c3cedd; --muted:#8695a9; --faint:#66748a;
+  --line:#1d2635; --line-strong:#2c3849;
+  --accent:#6aa5ff; --accent-soft:#12233d;
+  --bounded:#4ade80; --bounded-bg:#0f2418;
+  --strained:#fbbf24; --strained-bg:#2a1f08;
+  --broken:#f87171; --broken-bg:#2b1212;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--body);font-family:var(--serif);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 96px}
+.col{max-width:66ch}
+h1,h2,h3,h4{font-family:var(--sans);color:var(--ink);text-wrap:balance;margin:0}
+h1{font-size:clamp(30px,4.4vw,46px);line-height:1.05;letter-spacing:-.028em;font-weight:780}
+h2{font-size:clamp(21px,2.5vw,27px);line-height:1.15;letter-spacing:-.02em;font-weight:740}
+h3{font-size:17px;line-height:1.3;font-weight:700}
+h4{font-size:14px;font-weight:700}
+p{margin:0}
+strong{color:var(--ink);font-weight:600}
+code{font-family:var(--mono);font-size:.855em;background:var(--sunk);border:1px solid var(--line);
+  border-radius:4px;padding:.08em .34em;color:var(--ink);white-space:nowrap}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+header{padding:72px 0 40px;border-bottom:1px solid var(--line)}
+.lede{font-size:20px;line-height:1.5;color:var(--muted);margin-top:18px}
+.byline{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.tag{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);
+  border-radius:99px;padding:4px 11px;background:var(--surface)}
+section{padding-top:56px;display:flex;flex-direction:column;gap:20px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.thesis{background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;
+  padding:26px 28px;display:flex;flex-direction:column;gap:14px;margin-top:34px}
+.thesis p{font-size:18px;line-height:1.55}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.panel-head{padding:13px 18px;border-bottom:1px solid var(--line);background:var(--sunk);
+  display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.panel-body{padding:18px;display:flex;flex-direction:column;gap:14px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:13.5px;min-width:560px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.45}
+th{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:700;
+  background:var(--sunk);white-space:nowrap}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:12.5px}
+tr:last-child td{border-bottom:0}
+.pill{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:2.5px 8px;
+  border-radius:99px;white-space:nowrap;font-weight:600}
+.p-ok{background:var(--bounded-bg);color:var(--bounded)}
+.p-warn{background:var(--strained-bg);color:var(--strained)}
+.p-bad{background:var(--broken-bg);color:var(--broken)}
+.p-acc{background:var(--accent-soft);color:var(--accent)}
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+.node{flex:1 1 118px;min-width:108px;background:var(--surface);border:1px solid var(--line);
+  padding:11px 12px;display:flex;flex-direction:column;gap:4px}
+.node + .node{border-left:0}
+.node:first-child{border-radius:8px 0 0 8px}
+.node:last-child{border-radius:0 8px 8px 0}
+.node-k{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint)}
+.node-v{font-family:var(--sans);font-size:13px;font-weight:640;color:var(--ink);line-height:1.3}
+.node-n{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.node.grow{background:var(--broken-bg);border-color:var(--broken)}
+.node.grow .node-v{color:var(--broken)}
+.node.fixed{background:var(--bounded-bg);border-color:var(--bounded)}
+.node.fixed .node-v{color:var(--bounded)}
+.node.warn{background:var(--strained-bg);border-color:var(--strained)}
+.node.warn .node-v{color:var(--strained)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:17px 18px;
+  display:flex;flex-direction:column;gap:8px}
+.callout{background:var(--accent-soft);border:1px solid var(--accent);border-radius:9px;
+  padding:19px 21px;display:flex;flex-direction:column;gap:10px}
+.callout .eyebrow{color:var(--accent)}
+.finding{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--bounded);
+  border-radius:0 8px 8px 0;padding:17px 19px;display:flex;flex-direction:column;gap:9px}
+.finding.open{border-left-color:var(--strained)}
+.finding-h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.src{font-family:var(--mono);font-size:11px;color:var(--faint);word-break:break-all}
+ul{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:9px}
+li::marker{color:var(--faint)}
+footer{margin-top:72px;padding-top:26px;border-top:1px solid var(--line);color:var(--faint);
+  font-family:var(--mono);font-size:11.5px;line-height:1.7}
+footer a{color:var(--accent)}
+@media (max-width:720px){
+  body{font-size:16px}
+  .wrap{padding:0 17px 64px}
+  .two{grid-template-columns:1fr}
+  .node{border-radius:8px!important;border-left:1px solid var(--line)!important}
+  .flow{gap:7px}
+}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Search Playground · system design &amp; roadmap</div>
+  <h1 style="margin-top:14px">The Search Blueprint</h1>
+  <p class="lede">The complete system in one place: every stage from raw corpus to ranked answer,
+  every contract in the indices, the full data graph, the measured evaluation — and the road ahead,
+  from training our own retriever to the GraphRAG convergence. This is the A-to-Z design diagram
+  asked for in the 23&nbsp;Aug session, with every model call counted.</p>
+  <div class="byline">
+    <span class="tag">github.com/irafayabdul/search-playground @ dad095a</span>
+    <span class="tag">corpus: ESCI 482,060 · Appliances 94,313</span>
+    <span class="tag">8,956 judged test queries · 181,701 judgments</span>
+    <span class="tag">29 Aug 2026</span>
+  </div>
+</header>
+
+<div class="thesis">
+  <div class="eyebrow">The short answer</div>
+  <p><strong>The funnel is built and measured.</strong> OpenSearch&nbsp;2.19 runs BM25 and HNSW k-NN
+  side by side; Reciprocal Rank Fusion merges them; a cross-encoder re-orders the shortlist. On
+  8,956 judged ESCI queries the pipeline's story is quantified: hybrid beats either retriever alone
+  (+8% NDCG@10 over BM25), reranking is the single largest win (+26.5%), and — the number that
+  frames everything next — <strong>33% of relevant products never enter the top&nbsp;100 at
+  all</strong>. No reranker can recover them.</p>
+  <p><strong>Next is training the retriever.</strong> Both models are off-the-shelf: a MiniLM
+  bi-encoder that has never seen a product catalogue, truncating 42% of the corpus at 256 tokens,
+  and an MS-MARCO cross-encoder transferring from web passages. The ESCI train split — 20,888
+  queries, 419,653 judgments — is already on disk for exactly this. The loss function decides
+  what the retriever becomes: that is the next session.</p>
+  <p style="padding-top:12px;border-top:1px solid var(--line)"><strong>After that, the two roads
+  converge:</strong> serving hardening (server-side RRF, ONNX, learned-sparse retrieval), and the
+  GraphRAG project — where this search stack becomes the retrieval tool an agent calls.</p>
+</div>
+
+<section>
+  <div class="col stack">
+    <div class="eyebrow">Before anything else — the objects</div>
+    <h2>What the system is made of</h2>
+    <p>Two families of thing, built from opposite directions, joined at the document id. Almost
+    every design decision falls out of keeping them separate.</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h4>The corpus answers; the judgments keep it honest</h4><span class="eyebrow">the join is product_id</span></div>
+    <div class="panel-body">
+      <div class="scroll">
+        <div style="min-width:600px;display:grid;grid-template-columns:1fr 1fr;gap:0;font-family:var(--sans)">
+          <div style="border:1px solid var(--line);border-right:0;border-radius:8px 0 0 8px;padding:16px 18px;display:flex;flex-direction:column;gap:11px">
+            <div class="eyebrow">the corpus side · what can be found</div>
+            <div><span class="node-v">Source dataset</span><div class="node-n">ESCI products.parquet · McAuley category · toy jsonl</div></div>
+            <div style="padding-left:14px;border-left:2px solid var(--line-strong)"><span class="node-v">Document</span><div class="node-n">one uniform shape from every loader — id · title · features · text · filters</div></div>
+            <div style="padding-left:14px;border-left:2px solid var(--line-strong)"><span class="node-v">Embedding</span><div class="node-n">384-dim MiniLM vector · title→features→text, truncation counted</div></div>
+            <div style="padding-left:14px;border-left:2px solid var(--line-strong)"><span class="node-v">Index</span><div class="node-n">BM25 analysed fields + HNSW graph + keyword filters, one mapping per corpus</div></div>
+          </div>
+          <div style="border:1px solid var(--line);border-radius:0 8px 8px 0;padding:16px 18px;display:flex;flex-direction:column;gap:11px;background:var(--sunk)">
+            <div class="eyebrow">the evaluation side · what should be found</div>
+            <div><span class="node-v">Query</span><div class="node-n">real Amazon shopping searches · 29,844 in US-small</div></div>
+            <div style="padding-left:14px;border-left:2px solid var(--accent)"><span class="node-v">Judgment</span><div class="node-n">one (query, product) pair · graded E/S/C/I by humans</div></div>
+            <div style="padding-left:14px;border-left:2px solid var(--accent)"><span class="node-v">Qrels</span><div class="node-n">query_id → {doc_id: gain} · test split only · the answer key</div></div>
+            <div style="padding-left:14px;border-left:2px solid var(--accent)"><span class="node-v">Metric</span><div class="node-n">NDCG@k (ordering) · recall@k (presence) · seconds (cost)</div></div>
+          </div>
+        </div>
+      </div>
+      <p style="font-family:var(--sans);font-size:13.5px;color:var(--muted);line-height:1.55;margin-top:15px">
+      <strong style="color:var(--ink)">The split governs queries, not documents.</strong> We index
+      both train and test products — 482,060 — so test queries search a realistic haystack; we score
+      <em>only</em> test queries. Nothing in the pipeline has learned from ESCI (BM25 has no
+      parameters, MiniLM and the cross-encoder were trained elsewhere), so the evaluation is clean
+      without holding anything back — until Phase&nbsp;3 trains on the train split, when the split
+      becomes load-bearing.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col stack">
+    <div class="eyebrow">Index time — happens once per corpus</div>
+    <h2>From raw parquet to searchable index</h2>
+    <p>Three loaders, one output shape — which is why the rest of the pipeline never asks which
+    dataset it is on. The embedding step is where the corpus quality is decided, and where its
+    losses are counted rather than suffered silently.</p>
+  </div>
+
+  <div class="scroll">
+    <div class="flow" style="min-width:720px">
+      <div class="node"><span class="node-k">download</span><span class="node-v">Fetch the source</span><span class="node-n">1.06 GB parquet · resumable</span></div>
+      <div class="node"><span class="node-k">clean</span><span class="node-v">One document shape</span><span class="node-n">junk prices parsed · untitled dropped</span></div>
+      <div class="node warn"><span class="node-k">count loss</span><span class="node-v">Truncation audit</span><span class="node-n">42% exceed 256 tokens — known, not hidden</span></div>
+      <div class="node"><span class="node-k">embed</span><span class="node-v">MiniLM, batched</span><span class="node-n">120 docs/s CPU · 89 min for 482k</span></div>
+      <div class="node fixed"><span class="node-k">bulk write</span><span class="node-v">Index + HNSW build</span><span class="node-n">10.4 KB/doc · m, ef_c baked in</span></div>
+    </div>
+  </div>
+
+  <div class="panel"><div class="panel-head"><h4>The index-time sequence</h4><span class="eyebrow">1 model in play — the bi-encoder, once per document, at write time</span></div>
+  <div class="panel-body"><div class="scroll"><pre class="mermaid">
+sequenceDiagram
+  participant D as esci.py / amazon.py
+  participant H as HF / GitHub-LFS
+  participant E as Bi-encoder (MiniLM)
+  participant OS as OpenSearch
+  D->>H: download examples.parquet (49 MB) + products.parquet (1.06 GB)
+  D->>D: filter locale=us, small_version=1 - keep BOTH splits
+  D->>D: clean_record - one shape: id, title, features, text, brand, color
+  D->>D: write corpus jsonl + qrels jsonl (test split only)
+  D->>E: build_embedding_text - title, then features, then description
+  Note over E: 256-token window - order chosen so truncation eats the tail
+  E-->>D: 384-dim vectors, normalised for cosine
+  D->>OS: create index - mapping carries HNSW m=16, ef_construction=128
+  Note over OS: m and ef_construction are PERMANENT - change = full reindex
+  D->>OS: bulk write 482,060 docs with vectors
+  OS-->>D: HNSW graph built - only ef_search stays tunable live
+</pre></div></div></div>
+</section>
+
+<section>
+  <div class="col stack">
+    <div class="eyebrow">Query time — the funnel, every model call counted</div>
+    <h2>Retrieve wide and cheap, narrow with progressively costlier models</h2>
+    <p>Each stage costs more per document than the last and sees fewer of them. Invert that
+    ordering and you are running a cross-encoder over 482,060 documents — roughly 90 minutes
+    per query instead of 0.8 seconds.</p>
+  </div>
+
+  <div class="scroll">
+    <div class="flow" style="min-width:760px">
+      <div class="node"><span class="node-k">1 · retrieve</span><span class="node-v">BM25 + k-NN, fused</span><span class="node-n">RRF on rank · union of 2×20</span></div>
+      <div class="node"><span class="node-k">2 · trim</span><span class="node-v">must / should filters</span><span class="node-n">hard = membership · soft = score</span></div>
+      <div class="node warn"><span class="node-k">3 · rerank</span><span class="node-v">Cross-encoder</span><span class="node-n">expensive · shortlist only</span></div>
+      <div class="node fixed"><span class="node-k">4 · final</span><span class="node-v">Top 5</span><span class="node-n">what an LLM would read</span></div>
+      <div class="node"><span class="node-k">5 · generate</span><span class="node-v">Deliberately absent</span><span class="node-n">the RAG session — and the agent</span></div>
+    </div>
+  </div>
+
+  <div class="panel"><div class="panel-head"><h4>Inside one hybrid query</h4><span class="eyebrow">2 model invocations — the query embedding, and one cross-encoder batch</span></div>
+  <div class="panel-body"><div class="scroll"><pre class="mermaid">
+sequenceDiagram
+  participant U as Caller
+  participant P as pipeline.run
+  participant E as Bi-encoder
+  participant OS as OpenSearch
+  participant CE as Cross-encoder
+  U->>P: query + optional must/should filters
+  P->>E: CALL 1 - embed the query (same model as the documents, necessarily)
+  par lexical
+    P->>OS: multi_match on title^2, features, text (+ bool filters)
+    OS-->>P: top-k by BM25
+  and neural
+    P->>OS: knn on embedding - filter INSIDE the knn clause
+    Note over OS: filter applied DURING graph traversal - k survivors guaranteed
+    OS-->>P: top-k by cosine
+  end
+  P->>P: RRF - score(d) = sum of w_i / (60 + rank_i) - rank, never raw score
+  P->>P: trim to 12 - the funnel narrows
+  P->>CE: CALL 2 - one batch: (query, doc) pairs read JOINTLY
+  CE-->>P: relevance logits - nothing precomputable, hence shortlist-only
+  P-->>U: top 5 + full stage trace (n_in, n_out, ids per stage)
+</pre></div>
+  <p style="font-family:var(--sans);font-size:13px;color:var(--muted)">Two design points carry the
+  stage. <strong style="color:var(--ink)">RRF fuses on rank</strong> because BM25 scores are
+  unbounded and corpus-dependent while cosine lives in [-1,1] — normalising them is guesswork;
+  rank position is comparable by construction. <strong style="color:var(--ink)">The k-NN filter
+  lives inside the knn clause</strong> so OpenSearch applies it during traversal and keeps walking
+  until k documents survive — outside, a selective filter silently returns fewer than k.</p>
+  </div></div>
+</section>
+
+<section>
+  <div class="col stack">
+    <div class="eyebrow">The contracts</div>
+    <h2>Every store, its load-bearing fields, and what may change</h2>
+    <p>The schema rule from the first session: <strong>a field earns its place</strong> by being
+    filtered, scored, or retrieved on — columns serving none of those are weight. The one contract
+    above all others: <strong>query and document vectors must come from the same model</strong> —
+    which is why Phase&nbsp;3's fine-tune forces a full re-embed of the corpus.</p>
+  </div>
+  <div class="panel"><div class="panel-body"><div class="scroll"><table style="min-width:900px">
+    <thead><tr><th>Store / shape</th><th>Load-bearing fields</th><th>Contract</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><code>products-esci</code> index</td><td class="num">title (text+kw) · features · text · brand (kw) · color (kw) · locale (kw) · embedding (384)</td><td>The judged corpus, both splits. Thin native filters by design — price/rating/category need the ESCI-S enrichment (Apache-2.0, 91.5% ASIN coverage), a decided-but-unbuilt extension.</td><td><span class="pill p-ok">live · 482,060 docs · 4.8 GB</span></td></tr>
+      <tr><td><code>products-appliances</code> index</td><td class="num">+ categories (kw array) · store (kw) · price (float) · average_rating · rating_number</td><td>The rich-filter demo corpus. The category <em>path</em> is a keyword array — one filter matches any level of the tree. Measured richest of six candidate categories before selection.</td><td><span class="pill p-ok">live · 94,313 docs · 0.94 GB</span></td></tr>
+      <tr><td><code>articles</code> index</td><td class="num">category · tags · published_year · rating · location (geo_point)</td><td>The 33-doc offline quickstart, committed in git — the only corpus with a geo field, kept for the geo_distance filter demo.</td><td><span class="pill p-ok">live · in-repo</span></td></tr>
+      <tr><td>document shape (all loaders)</td><td class="num">id · title · features · text · ...filters</td><td>One shape from three loaders — the reason the funnel never asks which dataset it runs on. Swapping corpora is a CLI flag, not a refactor.</td><td><span class="pill p-ok">contract</span></td></tr>
+      <tr><td><code>esci_us_small_qrels.jsonl</code></td><td class="num">query_id · query · doc_id · label · gain · graded</td><td>The answer key: test split only, both gain scales carried (paper 1.0/0.1/0.01/0.0 and common 3/2/1/0). Unjudged retrieved docs count 0 — the closed-world assumption that makes every metric a floor.</td><td><span class="pill p-ok">live · 181,701 rows</span></td></tr>
+      <tr><td>ESCI train split (on disk)</td><td class="num">20,888 queries · 419,653 judgments · 351,961 products</td><td>Phase 3's training data — already downloaded, zero extra bytes needed. Same parquet, different split filter.</td><td><span class="pill p-acc">staged for training</span></td></tr>
+      <tr><td><code>HNSWParams</code></td><td class="num">m=16 · ef_construction=128 · ef_search=100 · engine=lucene</td><td>m and ef_construction are baked into the graph at build time — recreate to change. ef_search is the one live knob: notebook 02 sweeps it against exact k-NN for the recall/latency knee.</td><td><span class="pill p-warn">2 of 4 need reindex</span></td></tr>
+      <tr><td><code>PipelineParams</code></td><td class="num">candidates=20 · after_trim=12 · rerank_top_k=10 · final_k=5 · rrf_k=60</td><td>The funnel's fan-out, all live-tunable. Production shape is the same funnel an order of magnitude wider (~1000 → ~100 → ~50 → ~10).</td><td><span class="pill p-ok">live-tunable</span></td></tr>
+      <tr><td>models</td><td class="num">all-MiniLM-L6-v2 (384d, 256 tok) · ms-marco-MiniLM-L-6-v2</td><td>Both off-the-shelf, neither has seen ESCI — what keeps today's eval clean, and what Phase 3 changes. Cross-encoder logits are MS-MARCO-calibrated: ordering is meaningful, absolute values are not.</td><td><span class="pill p-warn">untrained on domain</span></td></tr>
+    </tbody>
+  </table></div></div></div>
+</section>
+
+<section>
+  <div class="col stack">
+    <div class="eyebrow">The complete graph</div>
+    <h2>Source → corpus → indices → funnel → metrics, as one network</h2>
+    <p><strong>Solid = built and on main. Dotted = decided or designed — Phases 3–5.</strong></p>
+  </div>
+  <div class="panel"><div class="panel-body"><div class="scroll"><div style="min-width:1500px"><pre class="mermaid">
+graph LR
+  subgraph SRC["Sources"]
+    HF["McAuley HF - meta_Appliances.jsonl 272 MB"]
+    GH["amazon-science/esci-data - 2 parquets 1.1 GB"]
+    TOY["data/articles.jsonl - 33 docs, in git"]
+  end
+  subgraph LOAD["Loaders - one output shape"]
+    AM["amazon.py - clean, parse prices"]
+    ES["esci.py - locale/version/split filters"]
+    CO["corpus.py"]
+  end
+  subgraph EMB["Embedding"]
+    BET["build_embedding_text - title, features, text"]
+    ENC["MiniLM bi-encoder - 384d - 42% truncated, counted"]
+  end
+  subgraph IDX["OpenSearch 2.19 - single node, k-NN plugin"]
+    I1["products-esci - 482k"]
+    I2["products-appliances - 94k"]
+    I3["articles - 33"]
+  end
+  subgraph FUN["Query funnel"]
+    LEX["lexical_search - BM25, title^2"]
+    NEU["neural_search - HNSW, filter inside knn"]
+    RRF["reciprocal_rank_fusion - rank-based, k=60"]
+    TRIM["trim - must/should"]
+    CE["cross-encoder rerank - shortlist only"]
+  end
+  subgraph EVAL["Evaluation"]
+    QR["qrels - 8,956 test queries"]
+    MET["evaluate.py - NDCG@k, recall@k - hand-verified"]
+  end
+  HF --> AM --> BET
+  GH --> ES --> BET
+  TOY --> CO --> BET
+  BET --> ENC
+  ENC --> I1
+  ENC --> I2
+  ENC --> I3
+  GH -->|"examples.parquet, split=test"| QR
+  I1 --> LEX & NEU
+  LEX --> RRF
+  NEU --> RRF
+  RRF --> TRIM --> CE
+  CE --> MET
+  QR --> MET
+  ESS["ESCI-S enrichment - price, stars, category"] -.->|"91.5% ASIN join"| I1
+  TRAIN["ESCI train split - 419,653 judgments"] -.->|"Phase 3 - fine-tune"| FT["Tuned bi-encoder - loss function chosen by objective"]
+  FT -.->|"re-embed ALL docs - same-model contract"| I1
+  MET -.->|"before/after delta"| FT
+  CE -.->|"Phase 4 - server-side RRF processor, ONNX, neural-sparse"| SRV["Serving hardening"]
+  CE -.->|"Phase 5 - retrieval as an agent tool"| AG["Agentic layer - GraphRAG convergence"]
+</pre></div>
+  <p style="font-family:var(--sans);font-size:13px;color:var(--muted)">Three edges carry the design.
+  <strong style="color:var(--ink)">Loaders → one shape</strong>: the funnel is corpus-agnostic
+  because every loader emits the same dict. <strong style="color:var(--ink)">encoder → every
+  index</strong>: the same-model contract — retrain the encoder and every solid edge out of it must
+  be rebuilt. <strong style="color:var(--ink)">qrels → metrics</strong>: evaluation joins the
+  corpus only at scoring time, which is why indexing train-split documents never contaminates the
+  test measurement.</p>
+  </div></div></div>
+</section>
+
+<section>
+  <div class="col stack">
+    <div class="eyebrow">What the built system measures</div>
+    <h2>Four variants, 150 judged queries, one table</h2>
+  </div>
+  <div class="panel"><div class="panel-body"><div class="scroll"><table>
+    <thead><tr><th>Variant</th><th>NDCG@10</th><th>NDCG@5</th><th>recall@10</th><th>recall@100</th><th>sec/query</th><th>vs BM25</th></tr></thead>
+    <tbody>
+      <tr><td><strong>lexical (BM25)</strong></td><td class="num">0.3421</td><td class="num">0.3762</td><td class="num">0.2966</td><td class="num">0.6164</td><td class="num">0.074</td><td><span class="pill p-ok">baseline · fastest</span></td></tr>
+      <tr><td><strong>neural (k-NN)</strong></td><td class="num">0.2878</td><td class="num">0.3083</td><td class="num">0.2732</td><td class="num">0.5571</td><td class="num">0.422</td><td><span class="pill p-bad">−15.9%</span></td></tr>
+      <tr><td><strong>hybrid (RRF)</strong></td><td class="num">0.3694</td><td class="num">0.3944</td><td class="num">0.3368</td><td class="num">0.6700</td><td class="num">0.359</td><td><span class="pill p-ok">+8.0%</span></td></tr>
+      <tr><td><strong>hybrid + rerank</strong></td><td class="num">0.4326</td><td class="num">0.4767</td><td class="num">0.3697</td><td class="num">0.6700</td><td class="num">0.844</td><td><span class="pill p-ok">+26.5% · 11.4× cost</span></td></tr>
+    </tbody>
+  </table></div></div></div>
+
+  <div class="two">
+    <div class="card">
+      <div class="eyebrow">the uncomfortable finding</div>
+      <h3>BM25 beats the vectors here</h3>
+      <p style="font-size:15px">Product search is structurally lexical — brands, model numbers,
+      exact nouns. The embedding model has never seen a catalogue and truncates 42% of it. Vectors
+      are not automatically better; they are better <em>at particular things</em>, and hybrid still
+      beats both because the two retrievers fail on <em>different</em> queries.</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow">the number that sets the roadmap</div>
+      <h3>recall@100 did not move under reranking</h3>
+      <p style="font-size:15px">0.6700 with and without the cross-encoder — reranking reorders what
+      retrieval found and never retrieves anything new. The remaining 33% is a <em>retrieval</em>
+      failure, and only a better retriever — Phase&nbsp;3 — can touch it. Floor, not leaderboard:
+      unjudged docs count as non-relevant.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col stack">
+    <div class="eyebrow">How training data is prepared — the 23 Aug session, distilled</div>
+    <h2>Two paths to (query, document, label) triples</h2>
+    <p>Training a retriever needs labelled pairs. We have the luxury path today; the production
+    methodology from the session is recorded here because it is the answer whenever the corpus is
+    our own — and it is the same discipline the GraphRAG side uses for entity extraction.</p>
+  </div>
+
+  <div class="two">
+    <div class="card" style="border-color:var(--bounded)">
+      <div class="eyebrow" style="color:var(--bounded)">path A · ours today</div>
+      <h3>A benchmark did the labelling</h3>
+      <p style="font-size:15px">ESCI ships 601,354 human-graded judgments under Apache-2.0. Train
+      split for fitting, test split for the honest number. Zero labelling cost, one caveat: the
+      domain is Amazon's, not ours.</p>
+    </div>
+    <div class="card" style="border-color:var(--strained)">
+      <div class="eyebrow" style="color:var(--strained)">path B · production, no benchmark</div>
+      <h3>Build the labels with an LLM, carefully</h3>
+      <p style="font-size:15px">Real queries first, synthetic to widen, candidate documents chosen
+      to include <strong>hard negatives</strong>, labels from a batch-API LLM behind an optimised
+      prompt. The discipline is in the sampling and the prompt iterations, not the model.</p>
+    </div>
+  </div>
+
+  <div class="panel"><div class="panel-head"><h4>Path B, as a sequence</h4><span class="eyebrow">the labeller is the only model call — batched, ~half price</span></div>
+  <div class="panel-body"><div class="scroll"><pre class="mermaid">
+sequenceDiagram
+  participant DB as Query log / DB
+  participant L as LLM (batch API)
+  participant R as Untrained retrievers
+  participant T as Training set
+  DB->>T: real user queries - but shaped by the OLD search, so:
+  L->>T: synthetic queries in the same style - semantic search invites longer, complex phrasing
+  T->>T: canonical + non-canonical forms - "Python developer" = "Python engineer"
+  T->>R: embed every query AND every document - one neural model, one lexical
+  R-->>T: per query: top-100 similar + slices from ranks 500-600, 900-1000 + random irrelevant
+  Note over T: the slices are the point - HARD NEGATIVES, tricky for a model to tell apart.
+  Note over T: easy negatives teach nothing; the distinctions retrieval needs live near the boundary
+  T->>L: (query, ~300 candidate docs) - label each pair
+  Note over L: prompt carries examples + schema - then 10-20 optimisation rounds against spot checks
+  L-->>T: graded labels - the final dataset
+  T->>T: train the bi-encoder - the LOSS FUNCTION decides the trade-off:
+  Note over T: great retrieval + separate reranker, or good-at-both from one model - a latency-budget decision
+</pre></div></div></div>
+</section>
+
+<section>
+  <div class="col stack">
+    <div class="eyebrow">The roadmap</div>
+    <h2>Five phases — three built, one next, one converging</h2>
+  </div>
+
+  <div class="stack">
+    <div class="finding">
+      <div class="finding-h"><span class="pill p-ok">built</span><h3>Phase 0 · Infrastructure and the funnel</h3></div>
+      <p>OpenSearch 2.19 + Dashboards in Docker (single node, k-NN, lucene HNSW); the nine-module
+      pipeline; the toy corpus for offline quickstart; tiered teardown/rebuild so the whole footprint
+      is disposable. Verified end-to-end before any real data entered.</p>
+      <div class="src">docker/docker-compose.yml · src/opensearch_demo/ · scripts/</div>
+    </div>
+    <div class="finding">
+      <div class="finding-h"><span class="pill p-ok">built</span><h3>Phase 1 · A real corpus, chosen by measurement</h3></div>
+      <p>Six McAuley categories sampled and measured; Appliances won on text richness (68%
+      descriptions, median 115 words) and filter coverage (96% category trees). The Kaggle
+      title-only dataset was retired by the same measurements. 94,313 products live with
+      price/rating/tree/store filters.</p>
+      <div class="src">docs/research/datasets.html — 12 claims verified, 0 wrong</div>
+    </div>
+    <div class="finding">
+      <div class="finding-h"><span class="pill p-ok">built</span><h3>Phase 2 · Judged evaluation</h3></div>
+      <p>ESCI US-small in full — both splits indexed, test-only scoring, metrics implemented from
+      the formulas and verified against hand-computed values. The four-variant table above is the
+      deliverable, and the 0.67 recall ceiling is its headline.</p>
+      <div class="src">src/opensearch_demo/evaluate.py · notebooks/03_evaluation.ipynb</div>
+    </div>
+    <div class="finding open">
+      <div class="finding-h"><span class="pill p-warn">next — the training session</span><h3>Phase 3 · Train the retriever on ESCI</h3></div>
+      <p>The data is on disk; the loss function is the session topic. Plan: fine-tune the bi-encoder
+      on train-split triples (sentence-transformers ships MultipleNegativesRankingLoss and kin),
+      re-embed all 482k documents (~89 min — the same-model contract makes this unavoidable),
+      re-run notebook 03, and read the delta — <strong>recall@100 is the number to move</strong>.
+      Secondary experiments, cheap now that the harness exists: a 512-token embedding model to
+      erase the 42% truncation; RRF weight sweeps against judgments; rerank-depth tuning.
+      Cross-check our metrics and fusion against <code>ranx</code>.</p>
+      <div class="src">esci.load_examples(split="train") · 20,888 queries ready</div>
+    </div>
+    <div class="finding open">
+      <div class="finding-h"><span class="pill p-acc">decided · researched</span><h3>Phase 4 · Serving hardening</h3></div>
+      <p>From the verified tools research: move fusion server-side (OpenSearch 2.19 ships an RRF
+      score-ranker processor — compare against our client-side RRF as a live exercise); ONNX-quantise
+      the encoder for 2–3× CPU throughput; OpenSearch neural-sparse as the legally-clean
+      SPLADE-family third retriever; Quepid pointed at our index to collect our own judgments.
+      Explicitly rejected, with reasons on record: standalone vector DBs, framework retrieval
+      layers, NAVER SPLADE weights (CC-BY-NC-SA).</p>
+      <div class="src">docs/research/tools.html — 36 tools, licenses verified</div>
+    </div>
+    <div class="finding open">
+      <div class="finding-h"><span class="pill p-acc">horizon · the convergence</span><h3>Phase 5 · The agentic layer — where the two projects meet</h3></div>
+      <p>Stage 5 of the funnel is deliberately empty. It fills from both sides: this stack becomes
+      a <strong>retrieval tool an agent calls</strong> — the agentic-GraphRAG project's pattern,
+      pointed at product search — and the GraphRAG side reuses this project's discipline (measured
+      corpus choice, judged evaluation, the funnel's cost ordering) over a graph instead of an
+      index. Chunking → entity extraction → Neo4j on one side; BM25 + vectors + traversal on the
+      other; the same question — <em>what is worth retrieving, and how do we know?</em> — answered
+      with the same instruments.</p>
+      <div class="src">next-next session per 23 Aug · GraphRAG report to be shared in-repo</div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="eyebrow">where each stage actually stops</div>
+    <h2 style="font-size:23px">The binding constraint, per phase</h2>
+    <div class="scroll" style="margin-top:6px"><table>
+      <thead><tr><th>Stage</th><th>Input scale</th><th>Binding constraint</th><th>Fails how</th></tr></thead>
+      <tbody>
+        <tr><td><strong>BM25 alone</strong></td><td class="num">any corpus</td><td>vocabulary mismatch — paraphrase is invisible</td><td><span class="pill p-warn">misses meaning</span></td></tr>
+        <tr><td><strong>+ k-NN hybrid</strong></td><td class="num">482k docs · 8 min–89 min embed</td><td>the untrained encoder + 256-token truncation</td><td><span class="pill p-warn">recall ceiling 0.67</span></td></tr>
+        <tr><td><strong>+ cross-encoder</strong></td><td class="num">shortlist ≤ 25</td><td>latency — 11.4× BM25 at depth 10</td><td><span class="pill p-ok">quality bounded by retrieval</span></td></tr>
+        <tr><td><strong>+ trained retriever (P3)</strong></td><td class="num">419,653 training judgments</td><td>label quality and loss choice — measurable per run</td><td><span class="pill p-acc">the lever for the 33%</span></td></tr>
+        <tr><td><strong>+ agent (P5)</strong></td><td class="num">one tool call</td><td>everything above it — an agent cannot outrun its retriever</td><td><span class="pill p-acc">why the order is this order</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<footer>
+  Verified against main @ dad095a (29 Aug 2026) · all counts and metrics measured on this machine, not quoted<br>
+  Corpus: ESCI US-small 482,060 docs (4.8 GB indexed) · Appliances 94,313 (0.94 GB) · eval: 150-query sample of 8,956 judged test queries<br>
+  Sessions: Knowledge Sharing — Search (9 Aug) · Search 2 (23 Aug) — transcripts in meetings/, local only<br><br>
+  <span style="color:var(--muted)">Companion records —</span>
+  <a href="https://claude.ai/code/artifact/3555b3d0-e5e4-462f-8722-c48a101774ec">Search Dataset Verdict</a> ·
+  <a href="https://claude.ai/code/artifact/1ef82773-7f86-4182-a8f5-3d381c93db29">Search Tooling Landscape</a> ·
+  <a href="https://claude.ai/code/artifact/2f453df0-3eb7-4389-a00b-20da5659ac94">Search Pipeline Walkthrough</a> ·
+  in-repo: docs/code-walkthrough.html · docs/research/
+</footer>
+
+</div>
