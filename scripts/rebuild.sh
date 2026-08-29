@@ -17,6 +17,7 @@ echo "  cluster up"
 case "$DATASET" in
   toy)    .venv/bin/python -m opensearch_demo.demo --rebuild "warm up" ;;
   amazon) .venv/bin/python -m opensearch_demo.demo --dataset amazon --rebuild "warm up" ;;
-  esci)   echo "  esci loader not wired yet — see docs/research/datasets.html" ;;
+  esci)   .venv/bin/python -m opensearch_demo.esci
+          .venv/bin/python -m opensearch_demo.demo --dataset esci --rebuild "warm up" ;;
 esac
 echo "done. notebooks: .venv/bin/jupyter lab"

@@ -112,7 +112,25 @@ footer a{color:var(--accent)}
   .node{border-radius:8px!important;border-left:1px solid var(--line)!important}
   .flow{gap:7px}
 }
+
+.ba-pair{display:grid;grid-template-columns:1fr;gap:12px}
+.ba{border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.ba-head{padding:9px 14px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.ba.before .ba-head{background:var(--broken-bg);color:var(--broken)}
+.ba.after .ba-head{background:var(--bounded-bg);color:var(--bounded)}
+.ba.proj .ba-head{background:var(--accent-soft);color:var(--accent)}
+.ba-body{padding:14px;background:var(--surface)}
+.opt{border:1px solid var(--line);border-radius:9px;padding:15px 17px;background:var(--surface);
+  display:flex;flex-direction:column;gap:7px}
+.opt.pick{border-color:var(--bounded)}
+.opt.no{border-color:var(--broken)}
+.verdict{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.opt.pick .verdict{color:var(--bounded)}
+.opt.no .verdict{color:var(--broken)}
+.substep{border-left:2px solid var(--accent);padding-left:16px;display:flex;flex-direction:column;gap:7px}
+.substep h4{font-size:15px}
 </style>
+
 
 <div class="wrap">
 
@@ -121,13 +139,14 @@ footer a{color:var(--accent)}
   <h1 style="margin-top:14px">The Search Blueprint</h1>
   <p class="lede">The complete system in one place: every stage from raw corpus to ranked answer,
   every contract in the indices, the full data graph, the measured evaluation — and the road ahead,
-  from training our own retriever to the GraphRAG convergence. This is the A-to-Z design diagram
-  asked for in the 23&nbsp;Aug session, with every model call counted.</p>
+  from training our own models to the GraphRAG convergence. This is the A-to-Z design diagram asked
+  for in the 23&nbsp;Aug session — retrieval and evaluation <em>built and measured</em>, query
+  understanding and serving <em>designed</em>, every model call counted throughout.</p>
   <div class="byline">
     <span class="tag">github.com/irafayabdul/search-playground @ dad095a</span>
     <span class="tag">corpus: ESCI 482,060 · Appliances 94,313</span>
-    <span class="tag">8,956 judged test queries · 181,701 judgments</span>
-    <span class="tag">29 Aug 2026</span>
+    <span class="tag">eval: 150-query sample of 8,956 judged</span>
+    <span class="tag">second revision · 29 Aug 2026</span>
   </div>
 </header>
 
@@ -135,7 +154,7 @@ footer a{color:var(--accent)}
   <div class="eyebrow">The short answer</div>
   <p><strong>The funnel is built and measured.</strong> OpenSearch&nbsp;2.19 runs BM25 and HNSW k-NN
   side by side; Reciprocal Rank Fusion merges them; a cross-encoder re-orders the shortlist. On
-  8,956 judged ESCI queries the pipeline's story is quantified: hybrid beats either retriever alone
+  a 150-query sample of the 8,956 judged ESCI test queries, the pipeline's story is quantified: hybrid beats either retriever alone
   (+8% NDCG@10 over BM25), reranking is the single largest win (+26.5%), and — the number that
   frames everything next — <strong>33% of relevant products never enter the top&nbsp;100 at
   all</strong>. No reranker can recover them.</p>
@@ -144,9 +163,41 @@ footer a{color:var(--accent)}
   and an MS-MARCO cross-encoder transferring from web passages. The ESCI train split — 20,888
   queries, 419,653 judgments — is already on disk for exactly this. The loss function decides
   what the retriever becomes: that is the next session.</p>
+  <p><strong>The re-ranker is the cheap half of that work and it comes first.</strong> Fine-tuning
+  the cross-encoder needs no re-embed — the index is untouched — so it can ship in a day against the
+  same training triples. Fine-tuning the bi-encoder invalidates all 482,060 vectors and forces a
+  full rebuild. Phase&nbsp;3 below is split accordingly: build the data once, train the re-ranker,
+  then train the retriever.</p>
   <p style="padding-top:12px;border-top:1px solid var(--line)"><strong>After that, the two roads
-  converge:</strong> serving hardening (server-side RRF, ONNX, learned-sparse retrieval), and the
-  GraphRAG project — where this search stack becomes the retrieval tool an agent calls.</p>
+  converge:</strong> serving hardening (the query-understanding front end, caching, server-side RRF,
+  ONNX/Triton, learned-sparse retrieval), and the GraphRAG project — where this search stack becomes
+  the retrieval tool an agent calls.</p>
+</div>
+
+<div class="panel" style="margin-top:16px">
+  <div class="panel-head"><h4>What changed in this revision</h4><span class="eyebrow">29 Aug · after four parallel reviewers against repo, transcripts, and the reference doc</span></div>
+  <div class="panel-body"><ul style="font-family:var(--sans);font-size:14px">
+    <li><strong>The Path B diagram rendered as nothing.</strong> A semicolon inside a mermaid
+    <code>Note</code> is a statement separator — the note truncated and the parse failed. Replaced
+    with a dash; all four diagrams re-linted.</li>
+    <li><strong>The evaluation table's provenance was unstated and one figure was wrong.</strong>
+    It was measured at <code>k=100</code> retrieval and cross-encoder depth <strong>25</strong>, not
+    the demo funnel's 20/12/10/5. The "11.4× at depth 10" line said depth 10. Both corrected, and
+    the harness settings are now stated wherever the numbers appear.</li>
+    <li><strong>Phase 3 covered only the retriever.</strong> The re-ranker — which carries the
+    +26.5% headline and is equally untrained on the domain — had no build slot. It is now
+    Phase&nbsp;3b with its own data flow, training sequence, and integration step.</li>
+    <li><strong>Three things Rashid covered at length were missing entirely:</strong> runtime query
+    understanding (filter + actual-query extraction before retrieval), service-level caching with a
+    reindex-bound TTL, and the deployment/serving scope the 23 Aug action item explicitly named.
+    All three now have sections.</li>
+    <li><strong><code>scripts/rebuild.sh</code> could not rebuild the ESCI tier</strong> — its
+    branch was still a "not wired yet" stub from before the loader existed. Fixed in code, not
+    just in prose.</li>
+    <li>Corrected: trim does not apply filters (they run inside the stage-1 queries); recall counts
+    <em>Exact-only</em> as relevant; the package is 13 modules; downloads are idempotent, not
+    resumable; <code>load_examples</code> has no <code>split</code> argument.</li>
+  </ul></div>
 </div>
 
 <section>
@@ -200,10 +251,10 @@ footer a{color:var(--accent)}
 
   <div class="scroll">
     <div class="flow" style="min-width:720px">
-      <div class="node"><span class="node-k">download</span><span class="node-v">Fetch the source</span><span class="node-n">1.06 GB parquet · resumable</span></div>
+      <div class="node"><span class="node-k">download</span><span class="node-v">Fetch the source</span><span class="node-n">1.06 GB parquet · idempotent, not resumable</span></div>
       <div class="node"><span class="node-k">clean</span><span class="node-v">One document shape</span><span class="node-n">junk prices parsed · untitled dropped</span></div>
       <div class="node warn"><span class="node-k">count loss</span><span class="node-v">Truncation audit</span><span class="node-n">42% exceed 256 tokens — known, not hidden</span></div>
-      <div class="node"><span class="node-k">embed</span><span class="node-v">MiniLM, batched</span><span class="node-n">120 docs/s CPU · 89 min for 482k</span></div>
+      <div class="node"><span class="node-k">embed</span><span class="node-v">MiniLM, batched</span><span class="node-n">120 docs/s measured · ~90 min embed+index</span></div>
       <div class="node fixed"><span class="node-k">bulk write</span><span class="node-v">Index + HNSW build</span><span class="node-n">10.4 KB/doc · m, ef_c baked in</span></div>
     </div>
   </div>
@@ -239,9 +290,10 @@ sequenceDiagram
   </div>
 
   <div class="scroll">
-    <div class="flow" style="min-width:760px">
-      <div class="node"><span class="node-k">1 · retrieve</span><span class="node-v">BM25 + k-NN, fused</span><span class="node-n">RRF on rank · union of 2×20</span></div>
-      <div class="node"><span class="node-k">2 · trim</span><span class="node-v">must / should filters</span><span class="node-n">hard = membership · soft = score</span></div>
+    <div class="flow" style="min-width:880px">
+      <div class="node warn"><span class="node-k">0 · understand</span><span class="node-v">Extract filters + query</span><span class="node-n">designed — Phase 4a · not built</span></div>
+      <div class="node"><span class="node-k">1 · retrieve</span><span class="node-v">BM25 + k-NN, fused</span><span class="node-n">RRF on rank · union of both lists</span></div>
+      <div class="node"><span class="node-k">2 · trim</span><span class="node-v">Cut to after_trim</span><span class="node-n">filters already ran in stage 1</span></div>
       <div class="node warn"><span class="node-k">3 · rerank</span><span class="node-v">Cross-encoder</span><span class="node-n">expensive · shortlist only</span></div>
       <div class="node fixed"><span class="node-k">4 · final</span><span class="node-v">Top 5</span><span class="node-n">what an LLM would read</span></div>
       <div class="node"><span class="node-k">5 · generate</span><span class="node-v">Deliberately absent</span><span class="node-n">the RAG session — and the agent</span></div>
@@ -258,6 +310,7 @@ sequenceDiagram
   participant CE as Cross-encoder
   U->>P: query + optional must/should filters
   P->>E: CALL 1 - embed the query (same model as the documents, necessarily)
+  Note over P,OS: shown parallel for clarity - hybrid_search runs them sequentially today
   par lexical
     P->>OS: multi_match on title^2, features, text (+ bool filters)
     OS-->>P: top-k by BM25
@@ -268,7 +321,8 @@ sequenceDiagram
   end
   P->>P: RRF - score(d) = sum of w_i / (60 + rank_i) - rank, never raw score
   P->>P: trim to 12 - the funnel narrows
-  P->>CE: CALL 2 - one batch: (query, doc) pairs read JOINTLY
+  P->>CE: CALL 2 - ONE BATCH of (query, doc) pairs, read JOINTLY
+  Note over CE: our own service, not OpenSearch's rerank endpoint - that loops at batch size 1
   CE-->>P: relevance logits - nothing precomputable, hence shortlist-only
   P-->>U: top 5 + full stage trace (n_in, n_out, ids per stage)
 </pre></div>
@@ -279,6 +333,121 @@ sequenceDiagram
   lives inside the knn clause</strong> so OpenSearch applies it during traversal and keeps walking
   until k documents survive — outside, a selective filter silently returns fewer than k.</p>
   </div></div>
+
+  <div class="panel">
+    <div class="panel-head"><h4>Where re-ranking runs — and why not in OpenSearch</h4><span class="eyebrow">ruled 23 Aug · Rashid's production experience</span></div>
+    <div class="panel-body">
+      <div class="opt pick">
+        <span class="verdict">Built · our own batched call</span>
+        <h3>A — the cross-encoder is a separate stage we control</h3>
+        <p style="font-size:15px">One <code>model.predict()</code> over all (query, document) pairs
+        in a single batch. <em>"Drop the connection in your head between re-ranking and OpenSearch —
+        for re-ranking you've built a separate service. OpenSearch is basically just a vector DB."</em>
+        That separation is also what lets the retriever and the re-ranker be different models,
+        trained independently — the index was built by the retriever and has no relationship to the
+        cross-encoder at all.</p>
+      </div>
+      <div class="opt no">
+        <span class="verdict">Rejected · OpenSearch's built-in rerank endpoint</span>
+        <h3>B — hand the model id to the cluster and let it re-rank</h3>
+        <p style="font-size:15px">It runs a <strong>loop at batch size one</strong>: one query
+        against 128 documents becomes 128 sequential encoder invocations instead of one batch.
+        <em>"Because of that it becomes very, very slow. So we don't use that."</em> The endpoint
+        exists and is convenient; the throughput is not.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col stack">
+    <div class="eyebrow">Stage 0 — designed, not built</div>
+    <h2>Query understanding: what arrives is not what you search with</h2>
+    <p>Our pipeline assumes the caller hands it a clean query string. Production does not work that
+    way — the same retriever has to serve a big AI search box, a small search bar with separate
+    filter widgets, and a RAG chatbot where the "query" is buried in a paragraph of conversation.
+    Before retrieval runs, two things must be pulled out of that raw text.</p>
+  </div>
+
+  <div class="panel"><div class="panel-head"><h4>The front end the funnel is missing</h4><span class="eyebrow">1–2 small model calls per query · latency-critical, hence small models</span></div>
+  <div class="panel-body"><div class="scroll"><pre class="mermaid">
+sequenceDiagram
+  participant U as User surface
+  participant X as Extraction service
+  participant Q as Query normaliser
+  participant P as pipeline.run
+  U->>X: raw text - could be a sentence, a paragraph, or a whole conversation
+  X->>X: pull DOMAIN FILTERS out of the text - location, price band, brand, rating
+  Note over X: users type filters into the query even when filter widgets exist
+  X->>X: pull the ACTUAL QUERY out - the searchable intent, minus the constraints
+  Note over X: ideally a small fine-tuned model - 1B params or less, LoRA on top
+  Note over X: trained on ground truth distilled from a large LLM, then the large one is dropped
+  X->>Q: actual query text
+  Q->>Q: canonical form - "Python developer" and "Python engineer" map together
+  Note over Q: normalise at INDEX time where you can - runtime normalisation is flaky
+  Q->>P: clean query + structured must/should filters
+  P->>P: the funnel as built - retrieve, trim, rerank
+</pre>
+  <p style="font-family:var(--sans);font-size:13px;color:var(--muted)"><strong style="color:var(--ink)">Why
+  a small model and not a big one:</strong> this sits in the latency path of every query. A frontier
+  LLM here costs more than the entire retrieval funnel. The pattern from the session is to distil —
+  use the big model once to label training data, fine-tune something around a billion parameters,
+  and serve that. Rashid's team ended up shrinking the extraction model for exactly this reason.
+  <strong style="color:var(--ink)">Why canonical forms matter:</strong> without them, "Python
+  developer" and "Python engineer" are different queries with different result sets and separate
+  cache entries, and your evaluation set fragments across spellings of the same intent.</p>
+  </div></div></div>
+</section>
+
+<section>
+  <div class="col stack">
+    <div class="eyebrow">Serving — the half of the 23 Aug ask this document owed</div>
+    <h2>Deployment, caching, and the cadence that bounds it</h2>
+    <p>The action item named the components explicitly: <em>"how are you deploying it? Are we
+    putting in any caching, any streaming, any queues?"</em> Nothing below is built here — this is
+    the target shape, drawn from what runs in production on Rashid's side.</p>
+  </div>
+
+  <div class="two">
+    <div class="card">
+      <div class="eyebrow">the cache that works</div>
+      <h3>Service-level, before the retriever</h3>
+      <p style="font-size:15px">The query arrives at the main service and is answered from cache
+      before any retriever runs — keyed on the <strong>lightly normalised</strong> query string, so
+      trivial variations collapse onto one entry. <strong>TTL of ten to fifteen minutes</strong>,
+      and the reason is not memory pressure: documents are re-indexed several times a day, so the
+      same query legitimately returns different results in the morning and the evening. The TTL is
+      bound to the ingest cadence, not chosen for its own sake.</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow">the cache that cannot work</div>
+      <h3>Why the cross-encoder stage is uncacheable</h3>
+      <p style="font-size:15px">A cross-encoder score is a function of the <em>pair</em>. Every
+      query arrives with a different candidate list, so the (query, document) pairs are almost never
+      repeated — there is nothing to hit. You can cache the <em>final answer</em> for a repeated
+      query at the service level, but you cannot cache the re-ranking stage itself. This is the same
+      property that makes it unprecomputable at index time.</p>
+    </div>
+  </div>
+
+  <div class="panel"><div class="panel-head"><h4>Ingestion — the write path the 9 Aug session covered</h4><span class="eyebrow">designed · our playground indexes in one batch instead</span></div>
+  <div class="panel-body"><div class="scroll"><pre class="mermaid">
+graph LR
+  SRC["Source systems - catalogue, CMS, scrapes"] --> BRK["Data broker - Kafka"]
+  BRK --> PROC["Processing - map to the index schema"]
+  PROC --> EMB["Embed - the same model that built the index"]
+  EMB --> OS["OpenSearch - bulk write, refresh interval batches it"]
+  OS --> CACHE["Service cache - TTL bound to this cadence"]
+  CACHE --> API["Search API"]
+  Note1["The broker absorbs variable arrival rates so a burst never overloads indexing"]
+  BRK -.- Note1
+</pre>
+  <p style="font-family:var(--sans);font-size:13px;color:var(--muted)">Our playground collapses this
+  whole path into one bulk write with <code>refresh=True</code> — correct for a notebook, wasteful in
+  production, where the refresh interval exists precisely to batch that work. The broker matters for
+  the same reason the cache TTL is short: <strong style="color:var(--ink)">indexing is continuous,
+  not a one-off</strong>, and every downstream assumption has to survive that.</p>
+  </div></div></div>
 </section>
 
 <section>
@@ -297,10 +466,11 @@ sequenceDiagram
       <tr><td><code>products-appliances</code> index</td><td class="num">+ categories (kw array) · store (kw) · price (float) · average_rating · rating_number</td><td>The rich-filter demo corpus. The category <em>path</em> is a keyword array — one filter matches any level of the tree. Measured richest of six candidate categories before selection.</td><td><span class="pill p-ok">live · 94,313 docs · 0.94 GB</span></td></tr>
       <tr><td><code>articles</code> index</td><td class="num">category · tags · published_year · rating · location (geo_point)</td><td>The 33-doc offline quickstart, committed in git — the only corpus with a geo field, kept for the geo_distance filter demo.</td><td><span class="pill p-ok">live · in-repo</span></td></tr>
       <tr><td>document shape (all loaders)</td><td class="num">id · title · features · text · ...filters</td><td>One shape from three loaders — the reason the funnel never asks which dataset it runs on. Swapping corpora is a CLI flag, not a refactor.</td><td><span class="pill p-ok">contract</span></td></tr>
-      <tr><td><code>esci_us_small_qrels.jsonl</code></td><td class="num">query_id · query · doc_id · label · gain · graded</td><td>The answer key: test split only, both gain scales carried (paper 1.0/0.1/0.01/0.0 and common 3/2/1/0). Unjudged retrieved docs count 0 — the closed-world assumption that makes every metric a floor.</td><td><span class="pill p-ok">live · 181,701 rows</span></td></tr>
+      <tr><td><code>esci_us_small_qrels.jsonl</code></td><td class="num">query_id · query · doc_id · label · gain · graded</td><td>The answer key: test split only, both gain scales carried (paper 1.0/0.1/0.01/0.0 and common 3/2/1/0). Unjudged retrieved docs count 0 — the closed-world assumption that makes every metric a floor. Recall's relevant set is <strong>E only</strong> (<code>DEFAULT_RELEVANT</code>); NDCG grades all four levels.</td><td><span class="pill p-ok">live · 181,701 rows</span></td></tr>
       <tr><td>ESCI train split (on disk)</td><td class="num">20,888 queries · 419,653 judgments · 351,961 products</td><td>Phase 3's training data — already downloaded, zero extra bytes needed. Same parquet, different split filter.</td><td><span class="pill p-acc">staged for training</span></td></tr>
       <tr><td><code>HNSWParams</code></td><td class="num">m=16 · ef_construction=128 · ef_search=100 · engine=lucene</td><td>m and ef_construction are baked into the graph at build time — recreate to change. ef_search is the one live knob: notebook 02 sweeps it against exact k-NN for the recall/latency knee.</td><td><span class="pill p-warn">2 of 4 need reindex</span></td></tr>
       <tr><td><code>PipelineParams</code></td><td class="num">candidates=20 · after_trim=12 · rerank_top_k=10 · final_k=5 · rrf_k=60</td><td>The funnel's fan-out, all live-tunable. Production shape is the same funnel an order of magnitude wider (~1000 → ~100 → ~50 → ~10).</td><td><span class="pill p-ok">live-tunable</span></td></tr>
+      <tr><td><code>demo.py</code> CLI</td><td class="num">--dataset toy|amazon|esci · --mode · --rebuild · --limit · --no-rerank · --category</td><td>The headless entry point and the mechanism behind "swapping corpora is a flag": builds the index if empty, runs one query through the full funnel, prints the stage trace. Invoked by <code>rebuild.sh</code> and by every notebook's prerequisite block.</td><td><span class="pill p-ok">live</span></td></tr>
       <tr><td>models</td><td class="num">all-MiniLM-L6-v2 (384d, 256 tok) · ms-marco-MiniLM-L-6-v2</td><td>Both off-the-shelf, neither has seen ESCI — what keeps today's eval clean, and what Phase 3 changes. Cross-encoder logits are MS-MARCO-calibrated: ordering is meaningful, absolute values are not.</td><td><span class="pill p-warn">untrained on domain</span></td></tr>
     </tbody>
   </table></div></div></div>
@@ -334,6 +504,7 @@ graph LR
     I3["articles - 33"]
   end
   subgraph FUN["Query funnel"]
+    QU["query understanding - filters + actual query - Phase 4a, not built"]
     LEX["lexical_search - BM25, title^2"]
     NEU["neural_search - HNSW, filter inside knn"]
     RRF["reciprocal_rank_fusion - rank-based, k=60"]
@@ -352,17 +523,20 @@ graph LR
   ENC --> I2
   ENC --> I3
   GH -->|"examples.parquet, split=test"| QR
+  QU -.-> LEX
+  QU -.-> NEU
   I1 --> LEX & NEU
   LEX --> RRF
   NEU --> RRF
   RRF --> TRIM --> CE
   CE --> MET
   QR --> MET
-  ESS["ESCI-S enrichment - price, stars, category"] -.->|"91.5% ASIN join"| I1
+  ESS["ESCI-S enrichment - price, stars, category"] -.->|"Phase 4b - 91.5% ASIN join"| I1
   TRAIN["ESCI train split - 419,653 judgments"] -.->|"Phase 3 - fine-tune"| FT["Tuned bi-encoder - loss function chosen by objective"]
   FT -.->|"re-embed ALL docs - same-model contract"| I1
   MET -.->|"before/after delta"| FT
-  CE -.->|"Phase 4 - server-side RRF processor, ONNX, neural-sparse"| SRV["Serving hardening"]
+  CE -.->|"Phase 3b - fine-tune on the SAME triples, no re-embed"| FTCE["Tuned cross-encoder"]
+  CE -.->|"Phase 4 - server RRF, ONNX/Triton, neural-sparse, cache"| SRV["Serving hardening"]
   CE -.->|"Phase 5 - retrieval as an agent tool"| AG["Agentic layer - GraphRAG convergence"]
 </pre></div>
   <p style="font-family:var(--sans);font-size:13px;color:var(--muted)">Three edges carry the design.
@@ -379,6 +553,20 @@ graph LR
   <div class="col stack">
     <div class="eyebrow">What the built system measures</div>
     <h2>Four variants, 150 judged queries, one table</h2>
+    <p><strong>The harness, stated:</strong> 150 queries sampled with a fixed seed from the 8,956
+    judged test queries; each variant retrieves <code>k=100</code>; the re-ranked variant runs the
+    cross-encoder over the <strong>top 25</strong>. These are <em>not</em> the demo funnel's
+    defaults (20 → 12 → 10 → 5) — at 20 candidates a recall@100 number would be meaningless. Read
+    the table as a measurement of the four retrieval strategies, not of the notebook's default
+    fan-out.</p>
+    <p><strong>What counts as relevant:</strong> recall uses the strict reading —
+    <strong>Exact-labelled products only</strong>. Substitutes and complements carry graded gain in
+    NDCG but are excluded from the recall denominator, so "33% never enter the top 100" means 33%
+    of the <em>exact</em> matches.</p>
+    <p><strong>And what this kind of measurement is for:</strong> these are <em>offline</em> metrics
+    — they guide design decisions before anything ships. A deployed system settles relevance
+    differently, by online A/B testing against real user behaviour. Offline numbers that improve are
+    a reason to run the experiment, not proof the users are better served.</p>
   </div>
   <div class="panel"><div class="panel-body"><div class="scroll"><table>
     <thead><tr><th>Variant</th><th>NDCG@10</th><th>NDCG@5</th><th>recall@10</th><th>recall@100</th><th>sec/query</th><th>vs BM25</th></tr></thead>
@@ -449,7 +637,7 @@ sequenceDiagram
   T->>R: embed every query AND every document - one neural model, one lexical
   R-->>T: per query: top-100 similar + slices from ranks 500-600, 900-1000 + random irrelevant
   Note over T: the slices are the point - HARD NEGATIVES, tricky for a model to tell apart.
-  Note over T: easy negatives teach nothing; the distinctions retrieval needs live near the boundary
+  Note over T: easy negatives teach nothing - the distinctions retrieval needs live near the boundary
   T->>L: (query, ~300 candidate docs) - label each pair
   Note over L: prompt carries examples + schema - then 10-20 optimisation rounds against spot checks
   L-->>T: graded labels - the final dataset
@@ -460,8 +648,184 @@ sequenceDiagram
 
 <section>
   <div class="col stack">
+    <div class="eyebrow">Phase 3, in full — the next build</div>
+    <h2>Training our own re-ranker and retriever</h2>
+    <p>Both models in the funnel are strangers to this domain: a MiniLM bi-encoder that has never
+    seen a product catalogue, and a cross-encoder trained on Bing web passages. Everything measured
+    so far is what off-the-shelf gets you. This is the plan to change that — ordered by cost,
+    because <strong>the two models are trained independently and only meet at the funnel</strong>.
+    The index was built by the retriever; the cross-encoder has no relationship to it at all, which
+    is exactly why the re-ranker can be replaced without touching a single stored vector.</p>
+  </div>
+
+  <div class="scroll">
+    <div class="flow" style="min-width:820px">
+      <div class="node fixed"><span class="node-k">3a · data</span><span class="node-v">Build triples once</span><span class="node-n">both models consume the same file</span></div>
+      <div class="node fixed"><span class="node-k">3b · re-ranker</span><span class="node-v">Fine-tune cross-encoder</span><span class="node-n">no re-embed · hours · ship same day</span></div>
+      <div class="node warn"><span class="node-k">3c · retriever</span><span class="node-v">Fine-tune bi-encoder</span><span class="node-n">forces full re-embed · ~90 min rebuild</span></div>
+      <div class="node"><span class="node-k">3d · measure</span><span class="node-v">Re-run notebook 03</span><span class="node-n">delta vs the four-variant table</span></div>
+    </div>
+  </div>
+
+  <div class="substep">
+    <div class="eyebrow">3a</div>
+    <h4>Build the training triples — once, for both models</h4>
+    <p style="font-family:var(--sans);font-size:14.5px">A cross-encoder and a bi-encoder want the
+    same raw material: <code>(query, document, label)</code>. We have two ways to get it, and the
+    honest position is that we should do both — the ESCI path to learn the mechanics on clean
+    labels, the synthetic path because it is what we will need when the corpus is ours.</p>
+  </div>
+
+  <div class="two">
+    <div class="card" style="border-color:var(--bounded)">
+      <div class="eyebrow" style="color:var(--bounded)">3a-i · free, available now</div>
+      <h3>From ESCI's judgments</h3>
+      <p style="font-size:15px">20,888 train queries, 419,653 graded judgments, already on disk —
+      the same parquet, filtered to <code>split=="train"</code>. E/S/C/I maps to either gain scale.
+      Positives are the E rows; the S and C rows are <strong>ready-made hard negatives</strong>,
+      which is the part that is normally expensive to construct. Zero labelling cost, zero new
+      downloads.</p>
+    </div>
+    <div class="card" style="border-color:var(--strained)">
+      <div class="eyebrow" style="color:var(--strained)">3a-ii · the transferable method</div>
+      <h3>Built synthetically, when no benchmark exists</h3>
+      <p style="font-size:15px">The Path B sequence above, executed: real queries from a log,
+      widened with LLM-generated synthetic queries in the same style, candidates drawn deliberately
+      across the similarity distribution to include hard negatives, labelled by a batch-API LLM
+      behind a prompt refined over 10–20 rounds. This is the path for any corpus of our own — and
+      the same discipline the GraphRAG side uses for entity extraction.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="eyebrow">the one idea to take from 3a</div>
+    <h2 style="font-size:22px">Hard negatives are the whole game</h2>
+    <p>A model learns nothing from a negative it can already tell apart. Random negatives are
+    trivially separable — pairing "ice maker" with a garden hose teaches the model a distinction it
+    already makes. The distinctions retrieval actually needs live near the decision boundary: the
+    substitute that is <em>almost</em> right, the complement that shares vocabulary but not intent.
+    That is why the sampling reaches into ranks 500–600 and 900–1000 rather than taking the top
+    hundred and calling the rest irrelevant — and it is why ESCI's <strong>S and C labels are worth
+    more than its E labels</strong> for training purposes.</p>
+  </div>
+
+  <div class="substep" style="margin-top:24px">
+    <div class="eyebrow">3b</div>
+    <h4>Train the re-ranker — the cheap half, and therefore first</h4>
+  </div>
+
+  <div class="panel"><div class="panel-head"><h4>Cross-encoder fine-tune and integration</h4><span class="eyebrow">index untouched · no re-embed · one file swap to ship</span></div>
+  <div class="panel-body"><div class="scroll"><pre class="mermaid">
+sequenceDiagram
+  participant D as ESCI train split
+  participant T as CrossEncoder trainer
+  participant M as Tuned model
+  participant P as rerank.py
+  participant N as notebook 03
+  D->>T: (query, document, label) pairs - E/S/C/I mapped to a score
+  Note over T: base model is a CHOICE independent of the retriever
+  Note over T: our retriever is MiniLM - the CE can be a different family entirely
+  T->>T: train with a pairwise or listwise objective over the graded labels
+  Note over T: S and C rows are the hard negatives - the reason this data is good
+  T->>M: save the fine-tuned cross-encoder
+  M->>P: point RERANK_MODEL at it - one constant in config.py
+  Note over P: NO re-embed - the index never knew about the cross-encoder
+  P->>N: re-run the four-variant table
+  N-->>P: delta on NDCG@10 - the number the re-ranker owns
+</pre>
+  <p style="font-family:var(--sans);font-size:13px;color:var(--muted)"><strong style="color:var(--ink)">Why
+  this ships in a day:</strong> the cross-encoder is a pure function of (query, document) evaluated
+  at query time. Swapping it changes <code>RERANK_MODEL</code> in <code>config.py</code> and nothing
+  else — no vectors move, no index is rebuilt, no downtime. <strong style="color:var(--ink)">What it
+  can and cannot fix:</strong> it owns NDCG — the ordering of what retrieval already found. It
+  cannot move recall@100 by a single point, because it never retrieves anything. If the re-ranked
+  NDCG improves and recall does not, that is the system working exactly as designed.</p>
+  </div></div></div>
+
+  <div class="substep" style="margin-top:24px">
+    <div class="eyebrow">3c</div>
+    <h4>Train the retriever — the expensive half, and the only lever on the 33%</h4>
+  </div>
+
+  <div class="panel"><div class="panel-head"><h4>Bi-encoder fine-tune and the forced rebuild</h4><span class="eyebrow">482,060 encoder calls to re-embed · ~90 min · unavoidable</span></div>
+  <div class="panel-body"><div class="scroll"><pre class="mermaid">
+sequenceDiagram
+  participant D as ESCI train split
+  participant T as SentenceTransformer trainer
+  participant M as Tuned bi-encoder
+  participant OS as OpenSearch
+  participant N as notebook 03
+  D->>T: (query, positive, hard negatives) triples
+  Note over T: the LOSS FUNCTION is the decision - MultipleNegativesRanking and kin
+  Note over T: it encodes the objective - great retrieval, or good-at-both from one model
+  T->>M: save the fine-tuned encoder
+  M->>M: re-embed ALL 482,060 documents
+  Note over M: forced by the same-model contract - old vectors are now meaningless
+  M->>OS: recreate index and bulk write - HNSW graph rebuilt from scratch
+  OS->>N: re-run the four-variant table
+  N-->>OS: delta on recall@100 - the number that decides whether this worked
+</pre>
+  <p style="font-family:var(--sans);font-size:13px;color:var(--muted)"><strong style="color:var(--ink)">The
+  loss function is the design decision, not a hyperparameter.</strong> The choice encodes what you
+  want the retriever to be. Train it to be excellent at candidate generation and let a separate
+  cross-encoder handle ordering, or train it to be decent at both and drop the re-ranker to save its
+  latency. Rashid's team pursued the second deliberately — <em>"we want good retrieval plus good
+  re-ranking from the retriever"</em> — because a cross-encoder is a whole extra layer in the latency
+  path. It is a serving-budget decision expressed as a training objective, and there is no universally
+  right answer.</p>
+  </div></div></div>
+
+  <div class="ba-pair" style="margin-top:20px">
+    <div class="ba before"><div class="ba-head">Before · measured today</div><div class="ba-body">
+      <div class="scroll"><div class="flow" style="min-width:640px">
+        <div class="node"><span class="node-k">retriever</span><span class="node-v">Off-the-shelf MiniLM</span><span class="node-n">never saw a catalogue</span></div>
+        <div class="node grow"><span class="node-k">input loss</span><span class="node-v">42% truncated</span><span class="node-n">256-token window</span></div>
+        <div class="node grow"><span class="node-k">recall@100</span><span class="node-v">0.6700</span><span class="node-n">33% of exact matches unreachable</span></div>
+        <div class="node"><span class="node-k">re-ranker</span><span class="node-v">MS MARCO cross-encoder</span><span class="node-n">web passages, not products</span></div>
+        <div class="node"><span class="node-k">NDCG@10</span><span class="node-v">0.4326</span><span class="node-n">hybrid + rerank</span></div>
+      </div></div>
+    </div></div>
+    <div class="ba proj"><div class="ba-head">After · to be measured, not projected</div><div class="ba-body">
+      <div class="scroll"><div class="flow" style="min-width:640px">
+        <div class="node fixed"><span class="node-k">3b first</span><span class="node-v">Domain cross-encoder</span><span class="node-n">NDCG moves · recall cannot</span></div>
+        <div class="node fixed"><span class="node-k">3c next</span><span class="node-v">Domain bi-encoder</span><span class="node-n">the only lever on recall</span></div>
+        <div class="node warn"><span class="node-k">optional</span><span class="node-v">512-token model</span><span class="node-n">erases the 42% truncation</span></div>
+        <div class="node"><span class="node-k">cost</span><span class="node-v">~90 min rebuild</span><span class="node-n">per retriever iteration</span></div>
+        <div class="node"><span class="node-k">verdict</span><span class="node-v">Same table, re-run</span><span class="node-n">no claim until measured</span></div>
+      </div></div>
+      <p style="font-family:var(--sans);font-size:13px;color:var(--muted);margin-top:10px">
+      Deliberately no predicted numbers. The harness exists, the baseline is recorded, and the
+      comparison is one notebook run — a guess here would only make the real result harder to read.</p>
+    </div></div>
+  </div>
+
+  <div class="substep" style="margin-top:24px">
+    <div class="eyebrow">3d</div>
+    <h4>Measure — and the secondary experiments the harness now makes cheap</h4>
+  </div>
+  <div class="panel"><div class="panel-body"><div class="scroll"><table>
+    <thead><tr><th>Experiment</th><th>Attacks</th><th>Cost</th><th>Needs a re-embed?</th></tr></thead>
+    <tbody>
+      <tr><td>Fine-tuned cross-encoder (3b)</td><td>ordering — NDCG@10</td><td class="num">hours</td><td><span class="pill p-ok">no</span></td></tr>
+      <tr><td>Fine-tuned bi-encoder (3c)</td><td>the recall ceiling</td><td class="num">hours + ~90 min rebuild</td><td><span class="pill p-warn">yes, full</span></td></tr>
+      <tr><td>512-token embedding model</td><td>the 42% truncation</td><td class="num">~90 min rebuild</td><td><span class="pill p-warn">yes, full</span></td></tr>
+      <tr><td>RRF weight sweep</td><td>fusion balance — BM25 is stronger here</td><td class="num">minutes</td><td><span class="pill p-ok">no</span></td></tr>
+      <tr><td>Rerank-depth sweep</td><td>the latency/quality exchange rate</td><td class="num">minutes</td><td><span class="pill p-ok">no</span></td></tr>
+      <tr><td>Cross-check against <code>ranx</code></td><td>trust in our own metrics and RRF</td><td class="num">minutes</td><td><span class="pill p-ok">no</span></td></tr>
+      <tr><td>ESCI-S enrichment join</td><td>filter demos on the judged corpus</td><td class="num">3.4 GB download</td><td><span class="pill p-ok">no — additive fields</span></td></tr>
+    </tbody>
+  </table></div>
+  <p style="font-family:var(--sans);font-size:13px;color:var(--muted)">Notebook 02 already sweeps
+  RRF weights and rerank depth; notebook 03 already computes the table. Everything in the "no"
+  column is an afternoon. Everything in the "yes" column costs a rebuild per iteration, which is the
+  real argument for getting 3a's data right before starting 3c.</p>
+  </div></div>
+</section>
+
+<section>
+  <div class="col stack">
     <div class="eyebrow">The roadmap</div>
-    <h2>Five phases — three built, one next, one converging</h2>
+    <h2>Six phases — three built, one next, one decided, one converging</h2>
   </div>
 
   <div class="stack">
@@ -488,25 +852,39 @@ sequenceDiagram
       <div class="src">src/opensearch_demo/evaluate.py · notebooks/03_evaluation.ipynb</div>
     </div>
     <div class="finding open">
-      <div class="finding-h"><span class="pill p-warn">next — the training session</span><h3>Phase 3 · Train the retriever on ESCI</h3></div>
-      <p>The data is on disk; the loss function is the session topic. Plan: fine-tune the bi-encoder
-      on train-split triples (sentence-transformers ships MultipleNegativesRankingLoss and kin),
-      re-embed all 482k documents (~89 min — the same-model contract makes this unavoidable),
-      re-run notebook 03, and read the delta — <strong>recall@100 is the number to move</strong>.
-      Secondary experiments, cheap now that the harness exists: a 512-token embedding model to
-      erase the 42% truncation; RRF weight sweeps against judgments; rerank-depth tuning.
-      Cross-check our metrics and fusion against <code>ranx</code>.</p>
-      <div class="src">esci.load_examples(split="train") · 20,888 queries ready</div>
+      <div class="finding-h"><span class="pill p-warn">next — the training session</span><h3>Phase 3 · Train our own models on our own data</h3></div>
+      <p>Four sub-phases, ordered by cost: <strong>3a</strong> build the training triples once,
+      <strong>3b</strong> fine-tune the re-ranker (cheap — no re-embed), <strong>3c</strong> fine-tune
+      the retriever (expensive — invalidates all 482k vectors), <strong>3d</strong> measure both
+      against today's table. Broken out in full in the section below, with the data flow, both
+      training sequences, and the integration step for each.</p>
+      <div class="src">detailed below · esci.load_examples() filtered to split=="train"</div>
     </div>
     <div class="finding open">
-      <div class="finding-h"><span class="pill p-acc">decided · researched</span><h3>Phase 4 · Serving hardening</h3></div>
-      <p>From the verified tools research: move fusion server-side (OpenSearch 2.19 ships an RRF
-      score-ranker processor — compare against our client-side RRF as a live exercise); ONNX-quantise
-      the encoder for 2–3× CPU throughput; OpenSearch neural-sparse as the legally-clean
-      SPLADE-family third retriever; Quepid pointed at our index to collect our own judgments.
-      Explicitly rejected, with reasons on record: standalone vector DBs, framework retrieval
-      layers, NAVER SPLADE weights (CC-BY-NC-SA).</p>
-      <div class="src">docs/research/tools.html — 36 tools, licenses verified</div>
+      <div class="finding-h"><span class="pill p-acc">decided · researched</span><h3>Phase 4 · The production shape — front end, serving, boosting</h3></div>
+      <p><strong>4a · Query understanding.</strong> The stage-0 front end above: a filter-extraction
+      service and an actual-query extractor, ideally a sub-1B fine-tuned model distilled from a large
+      one, plus canonical-form normalisation. Nothing downstream works on raw chatbot text without it.</p>
+      <p><strong>4b · Serving and caching.</strong> Service-level cache keyed on the normalised query
+      with a TTL bound to the reindex cadence (10–15 min); the ingestion path through a broker rather
+      than one bulk write; an A/B harness, because offline NDCG is a design instrument and online
+      behaviour is the verdict. Also here: the ESCI-S enrichment join (Apache-2.0, 91.5% ASIN
+      coverage) to give the judged corpus the price/rating/category filters it lacks.</p>
+      <p><strong>4c · Inference hardening.</strong> Move fusion server-side (OpenSearch 2.19 ships an
+      RRF score-ranker processor — compare against ours as a live exercise); ONNX-quantise the
+      encoders for 2–3× CPU throughput, or run a real inference server. The transferable warning from
+      the session: dynamic padding (<code>padding=True</code>) makes PyTorch cache a tensor per
+      (sequence-length × batch-size) combination — a leak invisible to Python-level tooling, visible
+      only as container memory climbing for a year. <code>padding="max_length"</code> is the
+      mitigation; a purpose-built runtime handles it for you. Plus OpenSearch neural-sparse as the
+      legally-clean SPLADE-family third retriever, and Quepid pointed at our index to collect our own
+      judgments. Rejected with reasons on record: standalone vector DBs, framework retrieval layers,
+      NAVER SPLADE weights (CC-BY-NC-SA).</p>
+      <p><strong>4d · Boosting.</strong> Named in the session and deliberately deferred — what to
+      boost, whether it attaches to the retriever or post-retrieval, and how to evaluate it against
+      judgments rather than intuition. Our only boost today is the implicit <code>title^2</code>
+      field weight.</p>
+      <div class="src">docs/research/tools.html — 36 tools, licenses verified · 23 Aug transcript 12:00, 36:00–45:00, 46:00–50:00</div>
     </div>
     <div class="finding open">
       <div class="finding-h"><span class="pill p-acc">horizon · the convergence</span><h3>Phase 5 · The agentic layer — where the two projects meet</h3></div>
@@ -521,6 +899,46 @@ sequenceDiagram
     </div>
   </div>
 
+  <div class="panel">
+    <div class="panel-head"><h4>Retired / replaced, in one table</h4><span class="eyebrow">every swap, with what forced it</span></div>
+    <div class="panel-body"><div class="scroll"><table>
+      <thead><tr><th>Gone</th><th>In its place</th><th>What forced it</th></tr></thead>
+      <tbody>
+        <tr><td>Kaggle Amazon-UK dataset (2.2M rows)</td><td>McAuley Appliances, then ESCI</td><td>Measured: title-only text starves the embedding side, and zero judgments make evaluation impossible</td></tr>
+        <tr><td>Synthetic 33-doc corpus as the primary</td><td>Real corpora; the toy set demoted to offline quickstart</td><td>On 33 documents every retrieval mode returned the same top hit — the modes cannot disagree at that scale</td></tr>
+        <tr><td>Score-based fusion of BM25 and cosine</td><td>Rank-based RRF</td><td>The two score scales are not comparable and normalising them is guesswork</td></tr>
+        <tr><td>OpenSearch's built-in rerank endpoint</td><td>Our own batched cross-encoder call</td><td>It loops at batch size 1 — 128 documents means 128 sequential invocations</td></tr>
+        <tr><td>Filter applied after k-NN traversal</td><td>Filter inside the <code>knn</code> clause</td><td>Post-filtering silently returns fewer than k on any selective filter</td></tr>
+        <tr><td>Client-side RRF <span class="pill p-acc">planned</span></td><td>Server-side score-ranker processor</td><td>Phase 4c — to be compared against ours, not assumed better</td></tr>
+        <tr><td>Off-the-shelf models <span class="pill p-acc">planned</span></td><td>Domain fine-tunes</td><td>Phase 3 — both are strangers to product search</td></tr>
+      </tbody>
+    </table></div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h4>Status board</h4><span class="eyebrow">every decision, its ruling, and where it lives</span></div>
+    <div class="panel-body"><div class="scroll"><table style="min-width:820px">
+      <thead><tr><th>Item</th><th>Decision</th><th>Ruled</th><th>Implementation</th></tr></thead>
+      <tbody>
+        <tr><td>Search engine</td><td>OpenSearch 2.19, Apache-2.0 — not Elasticsearch (AGPL option exists but x-pack stays ELv2)</td><td class="num">9 Aug</td><td><span class="pill p-ok">docker/docker-compose.yml</span></td></tr>
+        <tr><td>Vector engine</td><td>lucene over faiss — CPU-optimised, no off-heap pool</td><td class="num">9 Aug</td><td><span class="pill p-ok">config.HNSWParams</span></td></tr>
+        <tr><td>Fusion</td><td>Reciprocal Rank Fusion on rank, k=60</td><td class="num">9 Aug</td><td><span class="pill p-ok">search.reciprocal_rank_fusion</span></td></tr>
+        <tr><td>Demo corpus</td><td>McAuley Appliances — measured richest of six categories</td><td class="num">22 Aug</td><td><span class="pill p-ok">amazon.py · 94,313 docs</span></td></tr>
+        <tr><td>Evaluation corpus</td><td>ESCI US-small, both splits indexed, test-only scoring</td><td class="num">23 Aug</td><td><span class="pill p-ok">esci.py · 482,060 docs</span></td></tr>
+        <tr><td>Metrics</td><td>Implemented from formulas, not a library — verified by hand</td><td class="num">23 Aug</td><td><span class="pill p-ok">evaluate.py</span></td></tr>
+        <tr><td>Re-ranking location</td><td>Outside OpenSearch, our own batched call</td><td class="num">23 Aug</td><td><span class="pill p-ok">rerank.py</span></td></tr>
+        <tr><td>Re-ranker training</td><td>Fine-tune on ESCI triples — first, because no re-embed</td><td class="num">29 Aug</td><td><span class="pill p-warn">Phase 3b · planned</span></td></tr>
+        <tr><td>Retriever training</td><td>Fine-tune bi-encoder; loss choice = the objective</td><td class="num">29 Aug</td><td><span class="pill p-warn">Phase 3c · planned</span></td></tr>
+        <tr><td>Query understanding</td><td>Small distilled extractor, not a frontier LLM in the latency path</td><td class="num">23 Aug</td><td><span class="pill p-acc">Phase 4a · designed</span></td></tr>
+        <tr><td>Caching</td><td>Service-level, normalised key, TTL bound to reindex cadence</td><td class="num">23 Aug</td><td><span class="pill p-acc">Phase 4b · designed</span></td></tr>
+        <tr><td>Boosting</td><td>Deferred deliberately — needs judgments to evaluate against</td><td class="num">23 Aug</td><td><span class="pill p-acc">Phase 4d · deferred</span></td></tr>
+        <tr><td>SPLADE (NAVER weights)</td><td>Rejected — CC-BY-NC-SA is wrong for a public repo</td><td class="num">22 Aug</td><td><span class="pill p-bad">rejected</span></td></tr>
+        <tr><td>Standalone vector DB</td><td>Rejected — OpenSearch k-NN already does this job</td><td class="num">22 Aug</td><td><span class="pill p-bad">rejected</span></td></tr>
+        <tr><td>LangChain / LlamaIndex as retrieval</td><td>Rejected — abstractions hide the mechanics being taught</td><td class="num">22 Aug</td><td><span class="pill p-bad">rejected</span></td></tr>
+      </tbody>
+    </table></div></div>
+  </div>
+
   <div class="callout">
     <div class="eyebrow">where each stage actually stops</div>
     <h2 style="font-size:23px">The binding constraint, per phase</h2>
@@ -528,9 +946,10 @@ sequenceDiagram
       <thead><tr><th>Stage</th><th>Input scale</th><th>Binding constraint</th><th>Fails how</th></tr></thead>
       <tbody>
         <tr><td><strong>BM25 alone</strong></td><td class="num">any corpus</td><td>vocabulary mismatch — paraphrase is invisible</td><td><span class="pill p-warn">misses meaning</span></td></tr>
-        <tr><td><strong>+ k-NN hybrid</strong></td><td class="num">482k docs · 8 min–89 min embed</td><td>the untrained encoder + 256-token truncation</td><td><span class="pill p-warn">recall ceiling 0.67</span></td></tr>
-        <tr><td><strong>+ cross-encoder</strong></td><td class="num">shortlist ≤ 25</td><td>latency — 11.4× BM25 at depth 10</td><td><span class="pill p-ok">quality bounded by retrieval</span></td></tr>
+        <tr><td><strong>+ k-NN hybrid</strong></td><td class="num">482k docs · ~90 min embed+index</td><td>the untrained encoder + 256-token truncation</td><td><span class="pill p-warn">recall ceiling 0.67</span></td></tr>
+        <tr><td><strong>+ cross-encoder</strong></td><td class="num">shortlist = 25</td><td>latency — 11.4× BM25 at depth 25</td><td><span class="pill p-ok">quality bounded by retrieval</span></td></tr>
         <tr><td><strong>+ trained retriever (P3)</strong></td><td class="num">419,653 training judgments</td><td>label quality and loss choice — measurable per run</td><td><span class="pill p-acc">the lever for the 33%</span></td></tr>
+        <tr><td><strong>+ query understanding (P4a)</strong></td><td class="num">raw user text</td><td>extractor latency — it sits in every query's path</td><td><span class="pill p-acc">unbuilt: we assume clean queries</span></td></tr>
         <tr><td><strong>+ agent (P5)</strong></td><td class="num">one tool call</td><td>everything above it — an agent cannot outrun its retriever</td><td><span class="pill p-acc">why the order is this order</span></td></tr>
       </tbody>
     </table></div>
@@ -538,7 +957,8 @@ sequenceDiagram
 </section>
 
 <footer>
-  Verified against main @ dad095a (29 Aug 2026) · all counts and metrics measured on this machine, not quoted<br>
+  Second revision, 29 Aug 2026 — reviewed by four parallel agents against the repo, both meeting transcripts, mermaid grammar, and the reference document<br>
+  Verified against main @ dad095a · eval harness: 150-query sample, k=100 retrieval, cross-encoder depth 25 · recall counts Exact-labelled only<br>
   Corpus: ESCI US-small 482,060 docs (4.8 GB indexed) · Appliances 94,313 (0.94 GB) · eval: 150-query sample of 8,956 judged test queries<br>
   Sessions: Knowledge Sharing — Search (9 Aug) · Search 2 (23 Aug) — transcripts in meetings/, local only<br><br>
   <span style="color:var(--muted)">Companion records —</span>
